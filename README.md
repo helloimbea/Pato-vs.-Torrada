@@ -1,5 +1,3 @@
-# LEIA!!!
-
 # Resumo
 
 **Pato vs. Torrada** é um clicker onde você é um patinho simples e precisa derrotar todas as torradas.
@@ -10,15 +8,19 @@ Descubra todas as 10 torradas e vença elas até o nível 54!
 
 Baixe como zip
 
-Instale a extensão pygame no Vscode
-
 Extraia o zip Pato-vs.-Torrada-main, você criará uma pasta, ela se chamará Pato-vs.-Torrada-main
 
-Ao abrir essa pasta, você encontrará mais uma pasta de mesmo nome, essa que você abrirá no Vscode
+Abra no VScode a pasta que contém todos os arquivos
 
+Certifique-se que tem o Python instalado, com o pygame.exe no path
+
+Instale a biblioteca pygame no Vscode através do comando
+```
+pip install pygame
+```
 Use o jogo.py para rodar o código
 
-Pronto agora é só jogar
+Pronto agora é só jogar!
 
 # Informações sobre a gameplay
 
