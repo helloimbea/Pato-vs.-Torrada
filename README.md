@@ -1,4 +1,5 @@
 # 🦆 Duck vs. Toast
+(or "Pato vs. Torrada")
 
 *A clicker game where ducks battle against evil toasts!*
 
