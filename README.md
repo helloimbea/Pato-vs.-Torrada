@@ -1,56 +1,197 @@
-# Resumo
+# 🦆 Duck vs. Toast
 
-**Pato vs. Torrada** é um clicker onde você é um patinho simples e precisa derrotar todas as torradas.
-Compre mais patos para te ajudar e evolua-os!
-Descubra todas as 10 torradas e vença elas até o nível 54!
+*A clicker game where ducks battle against evil toasts!*
 
-# Como rodar o jogo no Visual Studio Code
+---
 
-Baixe como zip
+## 📖 About
 
-Extraia o zip Pato-vs.-Torrada-main, você criará uma pasta, ela se chamará Pato-vs.-Torrada-main
+**Duck vs. Toast** is a clicker game developed entirely in **Python** using **Pygame**.
 
-Abra no VScode a pasta que contém todos os arquivos
+You begin your journey with a single duck and must defeat increasingly stronger toasts. Earn **Duckcoins**, unlock powerful duck upgrades, and fight your way through **54 levels**, including challenging boss battles every five levels.
 
-Certifique-se que tem o Python instalado, com o pygame.exe no path
+This project was created from scratch, including the programming, game design, balancing, and artwork.
 
-Instale a biblioteca pygame no Vscode através do comando
+---
+
+## 🎮 Gameplay
+
+- Start with a basic duck that deals **1 click damage**.
+- Defeat toasts to earn **Duckcoins**.
+- Spend Duckcoins to buy stronger ducks and increase your damage.
+- Every level becomes more difficult but rewards more Duckcoins.
+- Every **5th level** is a boss battle with a **10-second time limit**.
+
+If you defeat the boss within the time limit, you advance to the next level.
+
+If you fail, the boss's health resets. You can return to previous levels to farm Duckcoins, upgrade your ducks, and try again.
+
+---
+
+## 🦆 Duck Upgrades
+
+### Siamese Duck
+
+- Adds **10 DPS** on the first purchase.
+- Each purchase adds another **10 DPS**.
+- Cost increases by **1.5×** each time.
+
+### Double Duck
+
+- Doubles your click damage.
+- Every purchase doubles the damage again.
+- Cost triples after every purchase.
+
+### Muscular Duck
+
+- Adds an automatic click.
+- Automatic clicks scale with your click damage.
+- Every purchase reduces the click interval by **50 milliseconds**.
+- Cost doubles after every purchase.
+
+### Realistic Duck
+
+- Doubles your total DPS.
+- Cost increases by **4×** after each purchase.
+
+### Bourgeois Duck *(Coming Soon)*
+
+Planned abilities:
+
+- Temporary damage boost
+- Temporary DPS boost
+- Temporary Duckcoin boost
+
+---
+
+## 🍞 Toast Enemies
+
+The game contains **10 different toast enemies**.
+
+As you progress through the levels, enemies become stronger but also reward more Duckcoins.
+
+Boss toasts appear every five levels and require strategy and upgrades to defeat within the time limit.
+
+---
+
+## 💻 Technologies
+
+- Python 3
+- Pygame
+
+---
+
+## 🚀 Installation
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/YOUR_USERNAME/Duck-vs.-Toast.git
 ```
+
+Or download the project as a ZIP file and extract it.
+
+### 2. Open the project
+
+Open the extracted folder in **Visual Studio Code** (or your preferred Python IDE).
+
+### 3. Install Python
+
+If Python is not installed, download it from:
+
+https://www.python.org/downloads/
+
+Make sure Python is added to your system PATH.
+
+### 4. Install Pygame
+
+Open a terminal inside the project folder and run:
+
+```bash
 pip install pygame
 ```
-Use o jogo.py para rodar o código
 
-Pronto agora é só jogar!
+### 5. Run the game
 
-# Informações sobre a gameplay
+Execute:
 
-O jogo começa com um pato inicial que dá 1 de dano nas torradas.
-A moeda do jogo é a Patocoin, que você ganha ao matar as torradas e usa pra comprar patos.
+```bash
+python jogo.py
+```
 
-Patos disponíveis para comprar:
-  - Pato Siamês: Adiciona 10 de DPS na primeira compra. A cada compra adiciona mais 10, mas aumenta o preço em 1.5.
-  - Pato dobrado: Dobra o dano do seu clique (pato simples). A cada compra dobra o dano mas triplica o custo.
-  - Pato musculoso: Adiciona um clique automático e escala com o dano de clique. A cada compra aumenta a frequência de cliques em -50 milissegundos, mas dobra de preço.
-  - Pato realista: Duplica o DPS a cada compra, mas quadriplica o preço.
-  - Pato burguês: Ainda não foi implementado no jogo. Mas seus efeitos seriam aumentar o dano, DPS e patocois temporariamente.
+Or simply run **jogo.py** using Visual Studio Code.
 
-A cada nível que você sobe, as torradas ficam mais fortes, mas também dão mais patocoins. Nos níveis múltiplos de 5, a torrada é um boss, que você tem apenas 10 segundos para matar.
-  - Se você conseguir vencê-lo dentro do tempo, avançará para o próximo nível.
-  - Se não conseguir matar o boss dentro dos 10 segundos, a vida dele volta a ficar cheia.
-    - Aqui você tem a opção de voltar os níveis anteriores e também trancar em um nível específico, para juntar dinheiro e conseguir mais patos para vencer o boss.
-   
-# Cheats
+---
 
-Aperte a tecla "p" para ganhar patocoins
+## 🎯 Controls
 
-# Ideias futuras:
-- Torradas boss tem armadura contra DPS.
-- Pato burguês chega de jatinho particular e adiciona buffs em todos os patos.
+| Action | Key |
+|---------|-----|
+| Attack | Left Mouse Button |
+| Cheat (Duckcoins) | P |
 
-# Inspirações
+---
 
-**Pato vs. Torrada** foi inspirado em jogos clickers, mas tem como principal inspiração para seu modelo de gameplay, o jogo Clicker Heroes e Duck Pond!
+## 💰 Currency
 
-Esse jogo foi feito 100% por mim.
+The in-game currency is **Duckcoin**.
 
-[Vídeo explicando a programação e mostrando a gameplay](https://drive.google.com/file/d/1RXUL7ZQSNVrTUbzpCTccicB7_eti3Wk-/view?usp=sharing)
+Duckcoins are earned by defeating toasts and can be spent to purchase duck upgrades.
+
+---
+
+## ✨ Features
+
+- Clicker gameplay
+- Automatic and manual damage
+- Multiple upgradeable ducks
+- Progressive difficulty
+- Boss battles
+- Duckcoin economy
+- Farming previous levels
+- 54 playable levels
+- 10 unique toast enemies
+
+---
+
+## 🛠 Future Features
+
+- Bosses with resistance against DPS.
+- Bourgeois Duck arriving in a private jet and temporarily buffing all ducks.
+- More ducks.
+- More enemies.
+- Additional bosses.
+- More upgrade paths.
+
+---
+
+## 💡 What I Learned
+
+This project helped me practice:
+
+- Object-Oriented Programming
+- Game loops
+- Event handling
+- Collision detection
+- UI development with Pygame
+- Game balancing
+- Upgrade systems
+- Saving and managing game state
+- Structuring larger Python projects
+
+---
+
+## 🎨 Inspiration
+
+The gameplay was mainly inspired by:
+
+- Clicker Heroes
+- Duck Pond
+
+---
+
+## 👨‍💻 Author
+
+Developed entirely by me.
+
+Everything in this project—including programming, gameplay mechanics, balancing, art, and game design—was created from scratch as a personal learning project.
