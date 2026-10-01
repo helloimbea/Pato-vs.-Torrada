@@ -79,7 +79,15 @@ Boss toasts appear every five levels and require strategy and upgrades to defeat
 
 ```
 Pato-vs.-Torrada/
-├── jogo.py                 # Game code (run this file)
+├── jogo.py                 # Entry point (run this file)
+├── pato_vs_torrada/        # Game code
+│   ├── config.py           # Screen, colors, positions, timings, balancing
+│   ├── niveis.py           # Level table: toast, health and reward per level
+│   ├── loja.py             # Duck shop: costs and what each duck does
+│   ├── estado.py           # Game state and rules (damage, DPS, bosses, levels)
+│   ├── tela.py             # Everything drawn on screen
+│   ├── recursos.py         # Loads images and sounds
+│   └── jogo.py             # Main loop and input handling
 ├── assets/
 │   ├── imagens/
 │   │   ├── patos/          # Ducks and locked-duck cards
@@ -91,6 +99,12 @@ Pato-vs.-Torrada/
 ├── requirements.txt
 └── README.md
 ```
+
+**Where to change things:**
+
+- Balance a level or add a new one → `pato_vs_torrada/niveis.py`
+- Add a new duck → `pato_vs_torrada/loja.py` (plus its images in `assets/imagens/patos/`)
+- Move a button/text or change a color or timer → `pato_vs_torrada/config.py`
 
 ---
 
