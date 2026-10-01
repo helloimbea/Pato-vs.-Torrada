@@ -75,6 +75,25 @@ Boss toasts appear every five levels and require strategy and upgrades to defeat
 
 ---
 
+## 📁 Project Structure
+
+```
+Pato-vs.-Torrada/
+├── jogo.py                 # Game code (run this file)
+├── assets/
+│   ├── imagens/
+│   │   ├── patos/          # Ducks and locked-duck cards
+│   │   ├── torradas/       # Toast enemies
+│   │   ├── interface/      # Buttons, pointer, boxes
+│   │   ├── mapas/          # Backgrounds
+│   │   └── outros/         # Unused / extra images
+│   └── sons/               # Sound effects
+├── requirements.txt
+└── README.md
+```
+
+---
+
 ## 💻 Technologies
 
 - Python 3
@@ -109,7 +128,7 @@ Make sure Python is added to your system PATH.
 Open a terminal inside the project folder and run:
 
 ```bash
-pip install pygame
+pip install -r requirements.txt
 ```
 
 ### 5. Run the game

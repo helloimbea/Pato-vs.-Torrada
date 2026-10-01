@@ -1,8 +1,19 @@
 import math
+import os
 import sys
 import pygame
 from pygame.display import update
 from pygame.locals import QUIT
+
+
+# Caminhos dos arquivos do jogo (funciona de qualquer pasta onde o jogo for executado)
+PASTA_JOGO = os.path.dirname(os.path.abspath(__file__))
+PASTA_IMAGENS = os.path.join(PASTA_JOGO, 'assets', 'imagens')
+PASTA_SONS = os.path.join(PASTA_JOGO, 'assets', 'sons')
+
+
+def carregar_imagem(categoria, nome):
+    return pygame.image.load(os.path.join(PASTA_IMAGENS, categoria, nome)).convert_alpha()
 
 
 # Inicialização do Pygame e Configurações da Janela
@@ -14,44 +25,44 @@ pygame.display.set_caption('Pato Game')
 pygame.mixer.init()
 
 # Carregar som de clique
-click_sound = pygame.mixer.Sound('quack.wav')  # quando clica faz som de pato
+click_sound = pygame.mixer.Sound(os.path.join(PASTA_SONS, 'quack.wav'))  # quando clica faz som de pato
 
 # Carregando Imagens
-mapa = pygame.image.load("mapa1.png").convert_alpha()  # Mapa de fundo
+mapa = carregar_imagem('mapas', 'mapa1.png')  # Mapa de fundo
 screen_width, screen_height = DISPLAYSURF.get_size()  # Tamanho da tela
 mapa = pygame.transform.scale(mapa, (screen_width, screen_height))  # Redimensiona o mapa
 
 DEFAULT_IMAGE_SIZE = (200,200)
 
 # Imagens de pato
-patoinicial = pygame.image.load('patoinicial.png').convert_alpha()
-patosiames = pygame.image.load('patosiames.png').convert_alpha()
-patodobrado = pygame.image.load('patodobrado.png').convert_alpha()
-patomusculoso = pygame.image.load('patomusculoso.png').convert_alpha()
-patorealista = pygame.image.load('patorealista.png').convert_alpha()
-#patoburgues = pygame.image.load('patoburgues.png').convert_alpha()
-bloqueiopatorealista = pygame.image.load('bloqueiopatorealista.png').convert_alpha()
-bloqueiopatoburgues = pygame.image.load('bloqueiopatoburgues.png').convert_alpha()
-bloqueiopatomusculoso = pygame.image.load('bloqueiopatomusculoso.png').convert_alpha()
-bloqueiopatodobrado = pygame.image.load('bloqueiopatodobrado.png').convert_alpha()
-bloqueiopatosiames = pygame.image.load('bloqueiopatosiames.png').convert_alpha()
-nivelbloqimagem = pygame.image.load('nivelbloq.png').convert_alpha()
-nivelavancaimagem = pygame.image.load('nivelavanca.png').convert_alpha()
-ponteiro = pygame.image.load('ponteiro.png').convert_alpha()
-caixinha = pygame.image.load('caixinha.png').convert_alpha()
+patoinicial = carregar_imagem('patos', 'patoinicial.png')
+patosiames = carregar_imagem('patos', 'patosiames.png')
+patodobrado = carregar_imagem('patos', 'patodobrado.png')
+patomusculoso = carregar_imagem('patos', 'patomusculoso.png')
+patorealista = carregar_imagem('patos', 'patorealista.png')
+#patoburgues = carregar_imagem('patos', 'patoburgues.png')
+bloqueiopatorealista = carregar_imagem('patos', 'bloqueiopatorealista.png')
+bloqueiopatoburgues = carregar_imagem('patos', 'bloqueiopatoburgues.png')
+bloqueiopatomusculoso = carregar_imagem('patos', 'bloqueiopatomusculoso.png')
+bloqueiopatodobrado = carregar_imagem('patos', 'bloqueiopatodobrado.png')
+bloqueiopatosiames = carregar_imagem('patos', 'bloqueiopatosiames.png')
+nivelbloqimagem = carregar_imagem('interface', 'nivelbloq.png')
+nivelavancaimagem = carregar_imagem('interface', 'nivelavanca.png')
+ponteiro = carregar_imagem('interface', 'ponteiro.png')
+caixinha = carregar_imagem('interface', 'caixinha.png')
 
 # Carregando as imagens de torradas
-torrada_nerd_image = pygame.image.load('torradanerd.png').convert_alpha()
-torrada_feliz_image = pygame.image.load('torradafeliz.png').convert_alpha()
-torradaaocontrarioimagem = pygame.image.load('torradavirada.png').convert_alpha()
-torradacoquetteimagem = pygame.image.load('torradacoquette.png').convert_alpha()
-torradamofadaimagem = pygame.image.load('torradamofada.png').convert_alpha()
-oquevoceestafazendoimagem = pygame.image.load('oquevoceestafazendo.png').convert_alpha()
-torradainterrogacaoimagem = pygame.image.load('torradainterrogacao.png').convert_alpha()
-torradinhaimagem = pygame.image.load('torradinha.png').convert_alpha()
-torradapalhacoimagem = pygame.image.load('torradapalhaco.png').convert_alpha()
-torradauwuimagem = pygame.image.load('torradauwu.png').convert_alpha()
-torradadechapeuimagem = pygame.image.load('torradadechapeu.png').convert_alpha()
+torrada_nerd_image = carregar_imagem('torradas', 'torradanerd.png')
+torrada_feliz_image = carregar_imagem('torradas', 'torradafeliz.png')
+torradaaocontrarioimagem = carregar_imagem('torradas', 'torradavirada.png')
+torradacoquetteimagem = carregar_imagem('torradas', 'torradacoquette.png')
+torradamofadaimagem = carregar_imagem('torradas', 'torradamofada.png')
+oquevoceestafazendoimagem = carregar_imagem('torradas', 'oquevoceestafazendo.png')
+torradainterrogacaoimagem = carregar_imagem('torradas', 'torradainterrogacao.png')
+torradinhaimagem = carregar_imagem('torradas', 'torradinha.png')
+torradapalhacoimagem = carregar_imagem('torradas', 'torradapalhaco.png')
+torradauwuimagem = carregar_imagem('torradas', 'torradauwu.png')
+torradadechapeuimagem = carregar_imagem('torradas', 'torradadechapeu.png')
 
 # Definição de Cores
 BLACK = (0, 0, 255)
