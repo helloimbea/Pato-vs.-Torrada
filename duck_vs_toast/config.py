@@ -48,7 +48,7 @@ BOSS_TIMER_TEXT_POS = (711, 114)
 LEVEL_TEXT_POS = (1100, 68)
 
 # --- Timings (in milliseconds) ---
-DPS_INTERVAL = 800                   # how often DPS damage is applied
+DPS_INTERVAL = 1000                  # how often DPS damage is applied (1000 = once per second)
 AUTO_CLICK_INTERVAL_START = 2000     # starting auto-click interval (muscular duck)
 AUTO_CLICK_INTERVAL_MIN = 200        # the interval never goes below this
 AUTO_CLICK_INTERVAL_STEP = 50        # how much the interval drops per purchase
@@ -56,9 +56,11 @@ BOSS_TIME_LIMIT = 10000
 
 # --- Balancing ---
 STARTING_DAMAGE = 1
-STARTING_DPS_BASE = 10
+STARTING_DPS_BASE = 12.5  # DPS added by each Siamese duck
 BOSS_EVERY_N_LEVELS = 5
 
-# --- Debug / cheats ---
-CHEAT_DUCKCOINS = 1000000000000  # amount gained when pressing P
-PRINT_CLICK_POSITION = True      # prints where the mouse clicked (handy for placing things)
+# --- Developer mode ---
+# Turn on while developing: enables the P cheat and prints where the mouse clicked
+# (handy for placing things on screen). Keep it False for players.
+DEV_MODE = False
+CHEAT_DUCKCOINS = 1000000000000  # amount gained when pressing P (dev mode only)

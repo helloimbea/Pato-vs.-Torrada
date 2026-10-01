@@ -39,11 +39,10 @@ def double_duck_effect(state):
 
 
 def muscular_duck_effect(state):
-    """Clicks on its own, faster and faster."""
-    state.auto_click_damage = state.damage
+    """Clicks on its own (with the current click damage), faster and faster."""
+    state.has_auto_click = True
     if state.auto_click_interval > config.AUTO_CLICK_INTERVAL_MIN:
         state.auto_click_interval -= config.AUTO_CLICK_INTERVAL_STEP
-    state.show_pointer = True
 
 
 def realistic_duck_effect(state):

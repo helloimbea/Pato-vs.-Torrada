@@ -4,17 +4,22 @@ import pygame
 from . import config
 from .shop import DUCKS
 
+NUMBER_SUFFIXES = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc']
+
 
 def format_number(num):
-    """Make big numbers shorter: 1500 -> '1.5 K'."""
-    if num >= 1000000000:
-        return f'{round(num / 1000000000, 1)} B'
-    elif num >= 1000000:
-        return f'{round(num / 1000000, 1)} M'
-    elif num >= 1000:
-        return f'{round(num / 1000, 1)} K'
-    else:
-        return str(num)
+    """Make numbers short and readable: 1500 -> '1.5 K', 12.5 -> '12.5', 2e12 -> '2 T'."""
+    tier = 0
+    while abs(num) >= 1000 and tier < len(NUMBER_SUFFIXES) - 1:
+        num /= 1000
+        tier += 1
+    num = round(num, 1)
+    if abs(num) >= 1000 and tier < len(NUMBER_SUFFIXES) - 1:  # e.g. 999.96 K rounds to 1000 K -> 1 M
+        num = round(num / 1000, 1)
+        tier += 1
+    text = str(int(num)) if num == int(num) else str(num)
+    suffix = NUMBER_SUFFIXES[tier]
+    return f'{text} {suffix}' if suffix else text
 
 
 def write(screen, font, text, color, position):
@@ -39,15 +44,15 @@ def draw(screen, font, assets, state, now):
     screen.blit(assets.ducks['starter_duck'], (0, 0))
 
     # Status texts
-    write(screen, font, str(round(state.health)), config.RED, config.HEALTH_TEXT_POS)
+    write(screen, font, format_number(round(state.health)), config.RED, config.HEALTH_TEXT_POS)
     write(screen, font, format_number(state.duckcoins), config.LIGHT_BLUE, config.DUCKCOINS_TEXT_POS)
     for duck in DUCKS:
         write(screen, font, format_number(state.costs[duck.name]), config.BLUE, duck.cost_text_pos)
     write(screen, font, format_number(state.dps), config.LIGHT_BLUE, config.DPS_TEXT_POS)
     write(screen, font, format_number(state.damage), config.LIGHT_BLUE, config.DAMAGE_TEXT_POS)
-    write(screen, font, f'{state.reward}', config.GREEN, config.REWARD_TEXT_POS)
+    write(screen, font, format_number(state.reward), config.GREEN, config.REWARD_TEXT_POS)
 
-    if state.show_pointer:
+    if state.has_auto_click:
         screen.blit(assets.ui['auto_click_pointer'], (0, 0))
 
     # Boss timer

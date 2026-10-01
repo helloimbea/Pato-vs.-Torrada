@@ -33,8 +33,8 @@ If you fail, the boss's health resets. You can return to previous levels to farm
 
 ### Siamese Duck
 
-- Adds **10 DPS** on the first purchase.
-- Each purchase adds another **10 DPS**.
+- Adds **12.5 DPS** on the first purchase.
+- Each purchase adds another **12.5 DPS**.
 - Cost increases by **1.5×** each time.
 
 ### Double Duck
@@ -171,7 +171,7 @@ Or simply run **main.py** using Visual Studio Code.
 | Action | Key |
 |---------|-----|
 | Attack | Left Mouse Button |
-| Cheat (Duckcoins) | P |
+| Cheat: +1 T Duckcoins (only with `DEV_MODE = True` in `duck_vs_toast/config.py`) | P |
 
 ---
 

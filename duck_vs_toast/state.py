@@ -26,7 +26,7 @@ class GameState:
         self.damage = config.STARTING_DAMAGE
         self.dps = 0
         self.dps_base = config.STARTING_DPS_BASE
-        self.auto_click_damage = 0  # muscular duck's automatic click
+        self.has_auto_click = False  # muscular duck: clicks on its own with the click damage
         self.auto_click_interval = config.AUTO_CLICK_INTERVAL_START
         self.last_auto_click = now
         self.last_dps = now
@@ -34,7 +34,6 @@ class GameState:
         # Shop
         self.costs = {duck.name: duck.starting_cost for duck in DUCKS}
         self.ducks_on_screen = []
-        self.show_pointer = False
 
         self.load_level()
 
@@ -99,11 +98,11 @@ class GameState:
     def update(self, now):
         """Called once per frame: automatic damage and boss timer."""
         # Muscular duck's automatic click
-        if self.auto_click_damage > 0:
+        if self.has_auto_click:
             hit, self.last_auto_click = self.interval_passed(
                 now, self.last_auto_click, self.auto_click_interval)
             if hit:
-                self.deal_damage(self.auto_click_damage)
+                self.deal_damage(self.damage)
 
         # Damage per second
         if self.dps > 0:
