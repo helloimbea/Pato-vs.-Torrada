@@ -79,32 +79,32 @@ Boss toasts appear every five levels and require strategy and upgrades to defeat
 
 ```
 Pato-vs.-Torrada/
-├── jogo.py                 # Entry point (run this file)
-├── pato_vs_torrada/        # Game code
+├── main.py                 # Entry point (run this file)
+├── duck_vs_toast/          # Game code
 │   ├── config.py           # Screen, colors, positions, timings, balancing
-│   ├── niveis.py           # Level table: toast, health and reward per level
-│   ├── loja.py             # Duck shop: costs and what each duck does
-│   ├── estado.py           # Game state and rules (damage, DPS, bosses, levels)
-│   ├── tela.py             # Everything drawn on screen
-│   ├── recursos.py         # Loads images and sounds
-│   └── jogo.py             # Main loop and input handling
+│   ├── levels.py           # Level table: toast, health and reward per level
+│   ├── shop.py             # Duck shop: costs and what each duck does
+│   ├── state.py            # Game state and rules (damage, DPS, bosses, levels)
+│   ├── screen.py           # Everything drawn on screen
+│   ├── assets.py           # Loads images and sounds
+│   └── game.py             # Main loop and input handling
 ├── assets/
-│   ├── imagens/
-│   │   ├── patos/          # Ducks and locked-duck cards
-│   │   ├── torradas/       # Toast enemies
-│   │   ├── interface/      # Buttons, pointer, boxes
-│   │   ├── mapas/          # Backgrounds
-│   │   └── outros/         # Unused / extra images
-│   └── sons/               # Sound effects
+│   ├── images/
+│   │   ├── ducks/          # Ducks and locked-duck cards
+│   │   ├── toasts/         # Toast enemies
+│   │   ├── ui/             # Buttons, pointer, boxes
+│   │   ├── maps/           # Backgrounds
+│   │   └── extras/         # Unused / extra images
+│   └── sounds/             # Sound effects
 ├── requirements.txt
 └── README.md
 ```
 
 **Where to change things:**
 
-- Balance a level or add a new one → `pato_vs_torrada/niveis.py`
-- Add a new duck → `pato_vs_torrada/loja.py` (plus its images in `assets/imagens/patos/`)
-- Move a button/text or change a color or timer → `pato_vs_torrada/config.py`
+- Balance a level or add a new one → `duck_vs_toast/levels.py`
+- Add a new duck → `duck_vs_toast/shop.py` (plus its images in `assets/images/ducks/`)
+- Move a button/text or change a color, timer or the FPS limit → `duck_vs_toast/config.py`
 
 ---
 
@@ -150,10 +150,10 @@ pip install -r requirements.txt
 Execute:
 
 ```bash
-python jogo.py
+python main.py
 ```
 
-Or simply run **jogo.py** using Visual Studio Code.
+Or simply run **main.py** using Visual Studio Code.
 
 ---
 
