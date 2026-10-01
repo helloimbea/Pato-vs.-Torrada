@@ -38,4 +38,6 @@ class Assets:
         self.ducks = load_folder('ducks')
         self.toasts = load_folder('toasts')
         self.ui = load_folder('ui')
-        self.click_sound = pygame.mixer.Sound(os.path.join(config.SOUNDS_DIR, 'quack.wav'))
+        self.click_sound = None  # stays None when there is no audio device (e.g. Codespaces)
+        if pygame.mixer.get_init():
+            self.click_sound = pygame.mixer.Sound(os.path.join(config.SOUNDS_DIR, 'quack.wav'))

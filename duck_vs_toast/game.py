@@ -21,7 +21,8 @@ def handle_click(event, state, assets, toast_rect):
     if clicked_circle(position, config.LEVEL_ADVANCE_BUTTON_POS, config.LEVEL_ADVANCE_BUTTON_RADIUS):
         state.toggle_level_advance()
 
-    assets.click_sound.play()
+    if assets.click_sound:
+        assets.click_sound.play()
 
     if clicked_circle(position, config.PREVIOUS_LEVEL_BUTTON_POS, config.PREVIOUS_LEVEL_BUTTON_RADIUS):
         state.previous_level()
@@ -42,7 +43,10 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
     pygame.display.set_caption(config.TITLE)
-    pygame.mixer.init()
+    try:
+        pygame.mixer.init()
+    except pygame.error:
+        print('No audio device found, playing without sound.')
 
     assets = Assets()
     font = pygame.font.SysFont(None, config.FONT_SIZE)

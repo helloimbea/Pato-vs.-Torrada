@@ -155,6 +155,15 @@ python main.py
 
 Or simply run **main.py** using Visual Studio Code.
 
+### Or play in GitHub Codespaces
+
+1. On the repository page, click **Code → Codespaces → Create codespace**.
+2. Wait for the setup to finish (it installs Pygame automatically).
+3. Open the **Ports** tab, find port **6080** and click the 🌐 icon to open the desktop in a new browser tab. Click **Connect** and use the password `vscode`.
+4. Back in the Codespaces terminal, run `python main.py`. The game window appears in the desktop tab.
+
+> Codespaces has no sound, so the game runs without the quack.
+
 ---
 
 ## 🎯 Controls
