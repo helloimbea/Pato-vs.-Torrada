@@ -14,6 +14,7 @@ LARGURA_TELA = 1280
 ALTURA_TELA = 720
 TITULO = 'Pato Game'
 TAMANHO_FONTE = 48
+FPS = 30  # limite de quadros por segundo (o jogo ainda não tem animações)
 
 # --- Cores ---
 VERMELHO = (234, 95, 112)

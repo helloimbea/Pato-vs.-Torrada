@@ -49,6 +49,7 @@ def main():
     torrada_rect = pygame.Rect(config.TORRADA_RECT)
     estado = EstadoJogo()
     botao_mouse_pressionado = False
+    relogio = pygame.time.Clock()
 
     while True:
         for evento in pygame.event.get():
@@ -69,3 +70,4 @@ def main():
         estado.atualizar(agora)
         desenhar(tela, fonte, recursos, estado, agora)
         pygame.display.update()
+        relogio.tick(config.FPS)

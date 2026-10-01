@@ -68,27 +68,50 @@ class EstadoJogo:
     # --- Combate ---
 
     def causar_dano(self, quantidade):
+        if self.vida == 0:
+            return
         self.vida = max(self.vida - quantidade, 0)
+        if self.vida == 0:
+            self.derrotar_torrada()
+
+    def derrotar_torrada(self):
+        """Dá a recompensa e passa para a próxima torrada (ou repete o nível)."""
+        self.patocoins += self.recompensa
+        if self.nivel_avanca and self.nivel + 1 in NIVEIS:
+            self.nivel += 1
+        self.carregar_nivel()
+
+    @staticmethod
+    def passou_intervalo(agora, ultimo, intervalo):
+        """Diz se já deu o tempo do próximo golpe automático e calcula o novo "último".
+
+        O novo "último" avança exatamente um intervalo, para que o atraso de cada
+        quadro (até 1/FPS segundo) não se acumule e o dano por segundo fique certo.
+        Se ficou muito para trás (ex.: o pato acabou de ser comprado), recomeça de agora.
+        """
+        if agora - ultimo < intervalo:
+            return False, ultimo
+        ultimo += intervalo
+        if agora - ultimo >= intervalo:
+            ultimo = agora
+        return True, ultimo
 
     def atualizar(self, agora):
-        """Chamado uma vez por frame: derrota da torrada, dano automático e tempo do boss."""
-        if self.vida == 0:
-            if self.nivel_avanca:
-                self.nivel += 1
-            self.patocoins += self.recompensa
-            self.carregar_nivel()
-
+        """Chamado uma vez por quadro: dano automático e tempo do boss."""
         # Clique automático do pato musculoso
-        if self.dano_clique > 0 and agora - self.ultimo_dano_clique >= self.dano_clique_intervalo:
-            self.causar_dano(self.dano_clique)
-            self.ultimo_dano_clique = agora
+        if self.dano_clique > 0:
+            bateu, self.ultimo_dano_clique = self.passou_intervalo(
+                agora, self.ultimo_dano_clique, self.dano_clique_intervalo)
+            if bateu:
+                self.causar_dano(self.dano_clique)
 
         # Dano por segundo
-        if self.dps > 0 and agora - self.ultimo_dps >= config.DPS_INTERVALO:
-            self.causar_dano(self.dps)
-            self.ultimo_dps = agora
+        if self.dps > 0:
+            bateu, self.ultimo_dps = self.passou_intervalo(agora, self.ultimo_dps, config.DPS_INTERVALO)
+            if bateu:
+                self.causar_dano(self.dps)
 
         # Se o tempo do boss acabar, ele recupera toda a vida
         if self.eh_boss() and agora - self.inicio_boss >= config.TEMPO_LIMITE_BOSS and self.vida > 0:
             self.vida = self.vida_max
-            self.inicio_boss = pygame.time.get_ticks()
+            self.inicio_boss = agora
