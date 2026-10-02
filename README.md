@@ -227,12 +227,7 @@ Duckcoins are earned by defeating toasts and can be spent to purchase duck upgra
 
 ## 🛠 Future Features
 
-- Bosses with resistance against DPS.
-- Bourgeois Duck arriving in a private jet and temporarily buffing all ducks.
-- More ducks.
-- More enemies.
-- Additional bosses.
-- More upgrade paths.
+Ideas for the future are collected in **[IDEAS.md](IDEAS.md)**.
 
 ---
 
