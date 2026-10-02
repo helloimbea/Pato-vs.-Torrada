@@ -13,19 +13,21 @@ Tip: mark how much you like an idea with ⭐ (nice to have) up to ⭐⭐⭐ (rea
 
 ## 🦆 Ducks
 
-- Bourgeois Duck arriving in a private jet and temporarily buffing all ducks.
-- More ducks.
-- More upgrade paths.
+- Bourgeois Duck arriving in a private jet and temporarily buffing all ducks.⭐⭐⭐
+- More ducks. ⭐⭐⭐⭐⭐
+- More upgrade paths. ⭐⭐⭐⭐
+- Duck Store: a new section with a lot of more ducks to buy. ⭐⭐⭐⭐⭐
 
 ## 🍞 Toasts and bosses
 
-- Bosses with resistance against DPS.
-- More enemies.
-- Additional bosses.
+- Bosses with resistance against DPS.⭐⭐⭐⭐⭐
+- More enemies.⭐
+- Additional bosses.⭐⭐
 
 ## 🎮 Gameplay
 
--
+- Players can grab the ducks and crash them against the toasts to give extra damage.⭐⭐⭐⭐
+- Duckoins economy: Players can buy a variety of other items, like potions, hats, decorations, other animals etc. ⭐⭐⭐⭐
 
 ## 🎨 Art and sound
 
