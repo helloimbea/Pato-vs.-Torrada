@@ -9,7 +9,7 @@
 
 **Duck vs. Toast** is a clicker game developed entirely in **Python** using **Pygame**.
 
-You begin your journey with a single duck and must defeat increasingly stronger toasts. Earn **Duckcoins**, unlock powerful duck upgrades, and fight your way through **54 levels**, including challenging boss battles every five levels.
+You begin your journey with a single duck and must defeat increasingly stronger toasts. Earn **Duckcoins**, unlock powerful duck upgrades, and fight your way through endless levels, including challenging boss battles every five levels.
 
 This project was created from scratch, including the programming, game design, balancing, and artwork.
 
@@ -67,7 +67,7 @@ Planned abilities:
 
 ## 🍞 Toast Enemies
 
-The game contains **10 different toast enemies**.
+The game contains **11 different toast enemies**. After the last one, they come back stronger, so the levels never end.
 
 As you progress through the levels, enemies become stronger but also reward more Duckcoins.
 
@@ -88,6 +88,9 @@ Pato-vs.-Torrada/
 │   ├── screen.py           # Everything drawn on screen
 │   ├── assets.py           # Loads images and sounds
 │   └── game.py             # Main loop and input handling
+├── tests/                  # Automated tests (pytest)
+├── tools/
+│   └── simulate_balance.py # Virtual player that measures the game's pace
 ├── assets/
 │   ├── images/
 │   │   ├── ducks/          # Ducks and locked-duck cards
@@ -97,12 +100,13 @@ Pato-vs.-Torrada/
 │   │   └── extras/         # Unused / extra images
 │   └── sounds/             # Sound effects
 ├── requirements.txt
+├── requirements-dev.txt    # Extra tools for development (pytest, ruff)
 └── README.md
 ```
 
 **Where to change things:**
 
-- Balance a level or add a new one → `duck_vs_toast/levels.py`
+- Rebalance the levels (health, rewards, bosses) or add a new toast → `duck_vs_toast/levels.py`, then run the balance simulator (below) to see how long the game takes
 - Add a new duck → `duck_vs_toast/shop.py` (plus its images in `assets/images/ducks/`)
 - Move a button/text or change a color, timer or the FPS limit → `duck_vs_toast/config.py`
 
@@ -166,6 +170,30 @@ Or simply run **main.py** using Visual Studio Code.
 
 ---
 
+## 🧪 Tests and balance
+
+Install the development tools once:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+Run the automated tests:
+
+```bash
+pytest
+```
+
+See how long the game takes, level by level, with a virtual player:
+
+```bash
+python -m tools.simulate_balance
+```
+
+The tests also run automatically on GitHub (in the **Actions** tab) every time code is pushed.
+
+---
+
 ## 🎯 Controls
 
 | Action | Key |
@@ -192,19 +220,14 @@ Duckcoins are earned by defeating toasts and can be spent to purchase duck upgra
 - Boss battles
 - Duckcoin economy
 - Farming previous levels
-- 54 playable levels
-- 10 unique toast enemies
+- Endless levels (about 1 hour to see every toast)
+- 11 unique toast enemies
 
 ---
 
 ## 🛠 Future Features
 
-- Bosses with resistance against DPS.
-- Bourgeois Duck arriving in a private jet and temporarily buffing all ducks.
-- More ducks.
-- More enemies.
-- Additional bosses.
-- More upgrade paths.
+Ideas for the future are collected in **[IDEAS.md](IDEAS.md)**.
 
 ---
 

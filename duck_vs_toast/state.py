@@ -1,14 +1,16 @@
 """Game state: everything that changes while playing (level, health, Duckcoins, ...)."""
 import pygame
 
-from . import config
-from .levels import LEVELS
+from . import config, levels
 from .shop import DUCKS
 
 
 class GameState:
-    def __init__(self):
-        now = pygame.time.get_ticks()
+    def __init__(self, clock=pygame.time.get_ticks):
+        # clock() returns the current time in milliseconds. The game uses Pygame's
+        # clock; the tests and the balance simulator pass a fake one.
+        self.clock = clock
+        now = clock()
 
         # Progress
         self.duckcoins = 0
@@ -40,17 +42,14 @@ class GameState:
     # --- Levels ---
 
     def is_boss(self):
-        return self.level % config.BOSS_EVERY_N_LEVELS == 0
+        return levels.is_boss(self.level)
 
     def load_level(self):
         """Put the current level's toast on screen (with full health)."""
-        data = LEVELS.get(self.level)
-        if data is None:
-            return
-        self.toast, self.max_health, self.reward = data
+        self.toast, self.max_health, self.reward = levels.get_level(self.level)
         self.health = self.max_health
         if self.is_boss():
-            self.boss_start = pygame.time.get_ticks()
+            self.boss_start = self.clock()
 
     def previous_level(self):
         if self.level > 1:
@@ -76,7 +75,7 @@ class GameState:
     def defeat_toast(self):
         """Give the reward and move on to the next toast (or repeat the level)."""
         self.duckcoins += self.reward
-        if self.level_advance and self.level + 1 in LEVELS:
+        if self.level_advance:
             self.level += 1
         self.load_level()
 
