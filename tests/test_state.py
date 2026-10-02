@@ -91,3 +91,37 @@ def test_interval_passed_keeps_a_steady_rhythm():
     assert GameState.interval_passed(now=1030, last=0, interval=1000) == (True, 1000)
     # Far behind (e.g. a duck was just bought): restart from now instead of hitting many times
     assert GameState.interval_passed(now=5000, last=0, interval=1000) == (True, 5000)
+
+
+def test_next_level_only_goes_up_to_levels_already_unlocked():
+    state, _ = new_game()
+    state.next_level()
+    assert state.level == 1  # level 2 isn't unlocked yet
+
+    state.deal_damage(state.max_health)  # beat level 1 -> level 2
+    state.previous_level()
+    assert state.level == 1
+    state.next_level()
+    assert state.level == 2
+    state.next_level()
+    assert state.level == 2
+
+
+def test_beating_a_level_while_farming_unlocks_the_next_one():
+    state, _ = new_game()
+    state.toggle_level_advance()
+    state.deal_damage(state.max_health)
+    assert state.level == 1
+    assert state.can_go_to_next_level()
+    state.next_level()
+    assert state.level == 2
+    assert not state.can_go_to_next_level()
+
+
+def test_mute_toggles():
+    state, _ = new_game()
+    assert not state.muted
+    state.toggle_mute()
+    assert state.muted
+    state.toggle_mute()
+    assert not state.muted

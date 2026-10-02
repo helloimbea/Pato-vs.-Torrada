@@ -85,12 +85,14 @@ Pato-vs.-Torrada/
 │   ├── levels.py           # Level table: toast, health and reward per level
 │   ├── shop.py             # Duck shop: costs and what each duck does
 │   ├── state.py            # Game state and rules (damage, DPS, bosses, levels)
-│   ├── screen.py           # Everything drawn on screen
+│   ├── screen.py           # Everything drawn on screen (including the shop tooltips)
+│   ├── numbers.py          # Short numbers: 1500 -> 1.5 K
 │   ├── assets.py           # Loads images and sounds
 │   └── game.py             # Main loop and input handling
 ├── tests/                  # Automated tests (pytest)
 ├── tools/
-│   └── simulate_balance.py # Virtual player that measures the game's pace
+│   ├── simulate_balance.py # Virtual player that measures the game's pace
+│   └── make_placeholder_icons.py # Draws the temporary sound and next-level icons
 ├── assets/
 │   ├── images/
 │   │   ├── ducks/          # Ducks and locked-duck cards
@@ -109,6 +111,8 @@ Pato-vs.-Torrada/
 - Rebalance the levels (health, rewards, bosses) or add a new toast → `duck_vs_toast/levels.py`, then run the balance simulator (below) to see how long the game takes
 - Add a new duck → `duck_vs_toast/shop.py` (plus its images in `assets/images/ducks/`)
 - Move a button/text or change a color, timer or the FPS limit → `duck_vs_toast/config.py`
+- Change a duck's tooltip text → its `..._description` function in `duck_vs_toast/shop.py`
+- Replace the temporary icons (`sound_on`, `sound_off`, `next_level_on`, `next_level_off` in `assets/images/ui/`) → draw your own 1280×720 images with the same names, with the icon in the same spot
 
 ---
 
@@ -199,6 +203,9 @@ The tests also run automatically on GitHub (in the **Actions** tab) every time c
 | Action | Key |
 |---------|-----|
 | Attack | Left Mouse Button |
+| Mute / unmute the quack | M (or the speaker button, top right) |
+| Go back / forward a level | `<` and `>` buttons next to the level (forward only to levels already beaten) |
+| See what a duck does | Hover the mouse over it in the shop |
 | Cheat: +1 T Duckcoins (only with `DEV_MODE = True` in `duck_vs_toast/config.py`) | P |
 
 ---

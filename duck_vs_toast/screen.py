@@ -2,31 +2,56 @@
 import pygame
 
 from . import config
+from .numbers import format_number
 from .shop import DUCKS
-
-NUMBER_SUFFIXES = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc']
-
-
-def format_number(num):
-    """Make numbers short and readable: 1500 -> '1.5 K', 12.5 -> '12.5', 2e12 -> '2 T'."""
-    tier = 0
-    while abs(num) >= 1000 and tier < len(NUMBER_SUFFIXES) - 1:
-        num /= 1000
-        tier += 1
-    num = round(num, 1)
-    if abs(num) >= 1000 and tier < len(NUMBER_SUFFIXES) - 1:  # e.g. 999.96 K rounds to 1000 K -> 1 M
-        num = round(num / 1000, 1)
-        tier += 1
-    text = str(int(num)) if num == int(num) else str(num)
-    suffix = NUMBER_SUFFIXES[tier]
-    return f'{text} {suffix}' if suffix else text
 
 
 def write(screen, font, text, color, position):
     screen.blit(font.render(text, True, color), position)
 
 
-def draw(screen, font, assets, state, now):
+def hovered_duck(mouse_pos):
+    """The duck whose buy button is under the mouse ('bourgeois' for the coming-soon one), or None."""
+    mouse = pygame.math.Vector2(mouse_pos)
+    for duck in DUCKS:
+        if mouse.distance_to(duck.button_pos) < config.SHOP_BUTTON_RADIUS:
+            return duck
+    if mouse.distance_to(config.BOURGEOIS_BUTTON_POS) < config.SHOP_BUTTON_RADIUS:
+        return 'bourgeois'
+    return None
+
+
+def draw_tooltip(screen, small_font, state, mouse_pos):
+    duck = hovered_duck(mouse_pos)
+    if duck is None:
+        return
+    if duck == 'bourgeois':
+        center_x = config.BOURGEOIS_BUTTON_POS[0]
+        lines = [('Bourgeois Duck', config.DARK_BLUE), ('Coming soon!', config.BLUE)]
+    else:
+        center_x = duck.button_pos[0]
+        lines = [
+            (duck.title, config.DARK_BLUE),
+            (duck.describe(state), config.BLUE),
+            (f'Bought: {state.purchases[duck.name]}', config.BLUE),
+        ]
+
+    texts = [small_font.render(text, True, color) for text, color in lines]
+    padding = 10
+    width = max(text.get_width() for text in texts) + 2 * padding
+    height = sum(text.get_height() for text in texts) + 2 * padding
+    # Above the shop, centered on the duck, without leaving the screen
+    x = min(max(center_x - width // 2, 5), config.SCREEN_WIDTH - width - 5)
+    y = 500 - height
+    box = pygame.Rect(x, y, width, height)
+    pygame.draw.rect(screen, config.TOOLTIP_BACKGROUND, box, border_radius=10)
+    pygame.draw.rect(screen, config.BLUE, box, width=2, border_radius=10)
+    for text in texts:
+        screen.blit(text, (x + padding, y + padding))
+        y += text.get_height()
+
+
+def draw(screen, font, small_font, assets, state, now, mouse_pos):
     # The duck, toast and UI images are screen-sized,
     # so they are all drawn at position (0, 0).
     screen.blit(assets.map, (0, 0))
@@ -64,9 +89,24 @@ def draw(screen, font, assets, state, now):
     level_image = 'level_advance_on' if state.level_advance else 'level_advance_off'
     screen.blit(assets.ui[level_image], (0, 0))
     write(screen, font, f'{state.level}', config.LIGHT_BLUE, config.LEVEL_TEXT_POS)
+    next_image = 'next_level_on' if state.can_go_to_next_level() else 'next_level_off'
+    screen.blit(assets.ui[next_image], (0, 0))
+
+    # Sound button
+    screen.blit(assets.ui['sound_off' if state.muted else 'sound_on'], (0, 0))
 
     # Ducks the player can't afford yet are shown as "locked"
     for duck in DUCKS:
         if state.duckcoins < state.costs[duck.name]:
             screen.blit(assets.ducks[duck.locked_image], (0, 0))
     screen.blit(assets.ducks['locked_bourgeois_duck'], (0, 0))  # bourgeois duck: coming soon
+
+    # How many times each duck was bought
+    for duck in DUCKS:
+        count = state.purchases[duck.name]
+        if count:
+            x, y = duck.button_pos
+            dx, dy = config.PURCHASE_COUNT_OFFSET
+            write(screen, small_font, f'x{count}', config.DARK_BLUE, (x + dx, y + dy))
+
+    draw_tooltip(screen, small_font, state, mouse_pos)

@@ -16,6 +16,7 @@ class GameState:
         self.duckcoins = 0
         self.level = 1
         self.level_advance = True  # if False, the player keeps "farming" the same level
+        self.highest_level = 1     # the furthest level unlocked (the next button can't go past it)
 
         # Current toast
         self.toast = ''
@@ -36,6 +37,10 @@ class GameState:
         # Shop
         self.costs = {duck.name: duck.starting_cost for duck in DUCKS}
         self.ducks_on_screen = []
+        self.purchases = {duck.name: 0 for duck in DUCKS}
+
+        # Settings
+        self.muted = False
 
         self.load_level()
 
@@ -56,12 +61,24 @@ class GameState:
             self.level -= 1
             self.load_level()
 
+    def can_go_to_next_level(self):
+        return self.level < self.highest_level
+
+    def next_level(self):
+        """Go forward again after farming an earlier level (only up to levels already unlocked)."""
+        if self.can_go_to_next_level():
+            self.level += 1
+            self.load_level()
+
     def toggle_level_advance(self):
         self.level_advance = not self.level_advance
 
     def boss_time_left(self, now):
         """Seconds left before the boss gets its health back."""
         return max(0, (self.boss_start + config.BOSS_TIME_LIMIT - now) // 1000)
+
+    def toggle_mute(self):
+        self.muted = not self.muted
 
     # --- Combat ---
 
@@ -75,6 +92,7 @@ class GameState:
     def defeat_toast(self):
         """Give the reward and move on to the next toast (or repeat the level)."""
         self.duckcoins += self.reward
+        self.highest_level = max(self.highest_level, self.level + 1)
         if self.level_advance:
             self.level += 1
         self.load_level()

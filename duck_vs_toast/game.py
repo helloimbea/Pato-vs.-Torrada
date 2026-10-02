@@ -28,6 +28,10 @@ def handle_click(event, state, assets, toast_rect):
         state.toggle_level_advance()
     elif clicked_circle(position, config.PREVIOUS_LEVEL_BUTTON_POS, config.PREVIOUS_LEVEL_BUTTON_RADIUS):
         state.previous_level()
+    elif clicked_circle(position, config.NEXT_LEVEL_BUTTON_POS, config.NEXT_LEVEL_BUTTON_RADIUS):
+        state.next_level()
+    elif clicked_circle(position, config.SOUND_BUTTON_POS, config.SOUND_BUTTON_RADIUS):
+        state.toggle_mute()
     else:
         hit_something = False
         for duck in shop.DUCKS:
@@ -37,7 +41,7 @@ def handle_click(event, state, assets, toast_rect):
                 break
 
     # Quack only when the click hit the toast or a button
-    if hit_something and assets.click_sound:
+    if hit_something and assets.click_sound and not state.muted:
         assets.click_sound.play()
 
 
@@ -52,6 +56,7 @@ def main():
 
     assets = Assets()
     font = pygame.font.SysFont(None, config.FONT_SIZE)
+    small_font = pygame.font.SysFont(None, config.SMALL_FONT_SIZE)
     toast_rect = pygame.Rect(config.TOAST_RECT)
     state = GameState()
     mouse_button_down = False
@@ -69,11 +74,13 @@ def main():
             elif event.type == pygame.MOUSEBUTTONUP:
                 mouse_button_down = False
 
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
+                state.toggle_mute()
             if config.DEV_MODE and event.type == pygame.KEYDOWN and event.key == pygame.K_p:
                 state.duckcoins += config.CHEAT_DUCKCOINS
 
         now = pygame.time.get_ticks()
         state.update(now)
-        draw(screen, font, assets, state, now)
+        draw(screen, font, small_font, assets, state, now, pygame.mouse.get_pos())
         pygame.display.update()
         clock.tick(config.FPS)

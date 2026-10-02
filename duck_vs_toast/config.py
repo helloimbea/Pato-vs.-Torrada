@@ -14,6 +14,7 @@ SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 TITLE = 'Duck vs. Toast'
 FONT_SIZE = 48
+SMALL_FONT_SIZE = 28  # purchase counters and tooltips
 FPS = 30  # frame rate limit (the game has no animations yet)
 
 # --- Colors ---
@@ -22,6 +23,8 @@ BLUE = (121, 161, 191)
 LIGHT_BLUE = (207, 228, 245)
 GREEN = (114, 167, 139)
 TIMER_BLUE = (108, 137, 244)
+DARK_BLUE = (62, 84, 110)
+TOOLTIP_BACKGROUND = (240, 246, 252)
 
 # --- Toast (clickable area) ---
 TOAST_RECT = (510, 201, 260, 242)  # x, y, width, height
@@ -36,7 +39,15 @@ LEVEL_ADVANCE_BUTTON_POS = (1121, 127)
 LEVEL_ADVANCE_BUTTON_RADIUS = 40
 PREVIOUS_LEVEL_BUTTON_POS = (1047, 79)
 PREVIOUS_LEVEL_BUTTON_RADIUS = 20
+NEXT_LEVEL_BUTTON_POS = (1203, 79)
+NEXT_LEVEL_BUTTON_RADIUS = 20
+SOUND_BUTTON_POS = (1252, 26)
+SOUND_BUTTON_RADIUS = 18
 SHOP_BUTTON_RADIUS = 40
+
+# --- Shop extras ---
+PURCHASE_COUNT_OFFSET = (48, -12)  # where "x3" is written, relative to each buy button's center
+BOURGEOIS_BUTTON_POS = (1125, 603)
 
 # --- Text positions ---
 HEALTH_TEXT_POS = (541, 115)
