@@ -1,0 +1,26 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      # No screen or sound card on the CI machine
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Check code style (ruff)
+        run: ruff check .
+      - name: Run tests (pytest)
+        run: pytest -v
+      - name: Show game pace (balance simulator)
+        run: python -m tools.simulate_balance
