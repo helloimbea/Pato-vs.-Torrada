@@ -12,8 +12,8 @@ from . import config
 # Every toast gets 5 levels: it starts as the boss and then shows up 4 more times.
 # After the last toast, the list starts over (with stronger toasts).
 TOASTS = [
-    'nerd_toast',
     'happy_toast',
+    'nerd_toast',
     'upside_down_toast',
     'moldy_toast',
     'coquette_toast',
