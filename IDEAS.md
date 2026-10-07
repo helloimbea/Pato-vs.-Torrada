@@ -26,7 +26,7 @@ Tip: mark how much you like an idea with ⭐ (nice to have) up to ⭐⭐⭐ (rea
 
 ## 🎮 Gameplay
 
-- Players can grab the ducks and crash them against the toasts to give extra damage.⭐⭐
+- Players can grab the ducks and crash them against the toasts to give extra damage. But the duck also get damage, so, after five hits, he gets completely battered and can't do damage anymore.⭐⭐⭐
 - Duckoins economy: Players can buy a variety of other items, like potions, hats, decorations, other animals etc. ⭐⭐
 
 ## 🎨 Art and sound
