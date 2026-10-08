@@ -2,14 +2,15 @@ from duck_vs_toast import levels
 
 
 def test_each_toast_lasts_five_levels_starting_as_boss():
-    assert [levels.toast_for(level) for level in (1, 4)] == ['nerd_toast'] * 2
-    assert levels.toast_for(5) == 'happy_toast'
-    assert levels.toast_for(54) == 'what_are_you_doing_toast'
+    first, second = levels.TOASTS[:2]
+    assert [levels.toast_for(level) for level in (1, 4)] == [first] * 2
+    assert levels.toast_for(5) == second
+    assert levels.toast_for(54) == levels.TOASTS[-1]
 
 
 def test_toasts_cycle_after_the_last_one():
-    assert levels.toast_for(55) == 'nerd_toast'
-    assert levels.toast_for(60) == 'happy_toast'
+    assert levels.toast_for(55) == levels.TOASTS[0]
+    assert levels.toast_for(60) == levels.TOASTS[1]
 
 
 def test_bosses_every_five_levels():
@@ -31,4 +32,4 @@ def test_boss_is_harder_and_pays_more_than_the_levels_around_it():
 
 
 def test_get_level_returns_toast_health_and_reward():
-    assert levels.get_level(1) == ('nerd_toast', levels.STARTING_HEALTH, levels.STARTING_REWARD)
+    assert levels.get_level(1) == (levels.TOASTS[0], levels.STARTING_HEALTH, levels.STARTING_REWARD)

@@ -8,7 +8,7 @@ SIAMESE, DOUBLE, MUSCULAR, REALISTIC = shop.DUCKS
 def test_game_starts_on_level_1_with_full_health():
     state, _ = new_game()
     assert state.level == 1
-    assert state.toast == 'nerd_toast'
+    assert state.toast == levels.TOASTS[0]
     assert state.health == state.max_health == levels.health_for(1)
 
 
