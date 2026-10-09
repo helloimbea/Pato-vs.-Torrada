@@ -93,9 +93,11 @@ def buy(state, duck):
     cost = state.costs[duck.name]
     if state.duckcoins < cost:
         return
-    if duck.name not in state.ducks_on_screen:
+    first_time = duck.name not in state.ducks_on_screen
+    if first_time:
         state.ducks_on_screen.append(duck.name)
     state.duckcoins -= cost
     state.purchases[duck.name] += 1
     duck.effect(state)
     state.costs[duck.name] = math.floor(cost * duck.cost_multiplier)
+    state.on_buy(duck.name, first_time)  # lets the duck stretch on screen (see effects.py)

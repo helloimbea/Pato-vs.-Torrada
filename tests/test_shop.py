@@ -86,3 +86,12 @@ def test_tooltips_describe_what_the_next_purchase_does():
     assert MUSCULAR.describe(state) == 'Clicks the toast for you every 1.9 s, with your click damage.'
     for duck in shop.DUCKS:
         assert duck.title and duck.describe(state)
+
+
+def test_buying_tells_the_screen_so_the_duck_can_stretch():
+    state, _ = new_game(duckcoins=10**6)
+    bought = []
+    state.on_buy = lambda name, first_time: bought.append((name, first_time))
+    shop.buy(state, SIAMESE)
+    shop.buy(state, SIAMESE)
+    assert bought == [('siamese_duck', True), ('siamese_duck', False)]

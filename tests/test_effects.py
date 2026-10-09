@@ -94,3 +94,41 @@ def test_toast_flinches_and_looks_hurt_after_any_hit(effects):
     assert fx.squish() == 0
     clock.now = 1000 + config.HURT_DURATION
     assert not fx.is_hurt()
+
+
+def test_beaten_toast_falls_over_while_the_next_one_pops_up(effects):
+    fx, clock = effects
+    assert fx.death() is None and fx.spawn() == 1
+    fx.defeat('nerd_toast')
+    assert fx.dead_toast == 'nerd_toast'
+    assert fx.death() == 0
+    assert fx.spawn() == 0  # the next toast waits a moment
+    clock.now += config.SPAWN_DELAY + config.SPAWN_DURATION // 2
+    assert fx.spawn() > 0
+    clock.now += config.SPAWN_DURATION
+    assert fx.spawn() == 1
+    clock.now += config.DEATH_DURATION
+    fx.update()
+    assert fx.death() is None and fx.dead_toast is None
+
+
+def test_bought_duck_stretches_then_settles(effects):
+    fx, clock = effects
+    assert fx.duck_scale('siamese_duck') == (1, 1)
+    fx.duck_bought('siamese_duck', first_time=False)
+    clock.now += config.DUCK_POP_DURATION // 6  # first it gets taller and thinner
+    width, height = fx.duck_scale('siamese_duck')
+    assert height > 1 > width
+    clock.now += config.DUCK_POP_DURATION // 3  # then shorter and wider
+    width, height = fx.duck_scale('siamese_duck')
+    assert width > 1 > height
+    clock.now += config.DUCK_POP_DURATION
+    assert fx.duck_scale('siamese_duck') == (1, 1)
+
+
+def test_new_duck_grows_in_from_nothing(effects):
+    fx, clock = effects
+    fx.duck_bought('realistic_duck', first_time=True)
+    assert fx.duck_scale('realistic_duck') == (0, 0)
+    clock.now += config.DUCK_GROW_TIME
+    assert fx.duck_scale('realistic_duck')[1] > 0.9
