@@ -27,6 +27,7 @@ duck_vs_toast/
   layout.py                resizable window: offset of each screen part, mouse -> part coords
   save.py                  save/load JSON (~/.duck_vs_toast/save.json), offline earnings
   clock.py                 GameClock: game time that stops while paused
+  i18n.py                  texts written by code, English + Portuguese; t('key')
   numbers.py               short numbers: 1500 -> "1.5 K"
   effects.py               animations: damage numbers, toast shake, flying coins
   assets.py                loads images and sounds
@@ -84,7 +85,12 @@ and say how the pace changed (today: level 54 in about 55 minutes).
 - Screens: start (with "welcome back" earnings), pause (Esc), victory once all toasts are beaten
   (`state.has_won`, shown once). They are text drawn by code in `game.py`; the game clock is
   paused behind them.
-- In-game text written by code (tooltips) is in English, because Phase 6 moves the drawn text to English too.
+- Languages (owner asked 2026-10-09): English and Portuguese, switched with L or the EN/PT button
+  (placeholder icons `ui/language_en.png`, `ui/language_pt.png`), saved with the progress; first run
+  uses the computer's language. Code text lives in `i18n.py` (every key in both languages; tests
+  run in English via `tests/conftest.py`). The current drawings are the Portuguese ones; an English
+  drawing is the same name + `_en` (`assets.localized`; maps: `maps/map1_en.png`), falling back to
+  the Portuguese drawing until the owner draws it.
 
 ## Plan and progress
 
@@ -97,7 +103,8 @@ Each phase is one pull request into `main`; the owner reviews and merges it on G
 - [x] **Phase 4:** damage numbers floating up, toast shaking and squashing (with a pained face) when hit, coins flying when a toast is beaten; later: beaten toast shrinks away, bought ducks stretch.
 - [x] **Phase 5:** save progress to JSON (autosave and on close), Duckcoins earned while closed
   (up to 8 h), start/pause (Esc)/victory screens, Bourgeois Duck.
-- [ ] **Phase 6 (next):** ~~crop the full-screen images~~ (done early, with Phase 4); drawn text in English (owner redraws, or use a font).
+- [ ] **Phase 6 (next):** ~~crop the full-screen images~~ (done early, with Phase 4); ~~language switch~~ (done);
+  English versions of the drawings with text (owner draws `_en` files).
 - [ ] **Phase 7:** browser version with `pygbag` for itch.io; Windows `.exe` with PyInstaller.
 
 When a phase is done, tick it here in the same pull request.

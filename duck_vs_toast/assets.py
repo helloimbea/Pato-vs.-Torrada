@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 import pygame
 
-from . import config
+from . import config, i18n
 
 
 def load_image(category, name):
@@ -214,6 +214,25 @@ def split_map(game_map, reward_badge):
     return background, Sprite(shop, (0, config.SHOP_TOP)), floor_row
 
 
+def localized(sprites, name):
+    """The drawing for the current language: "<name>_en" in English when it exists.
+
+    The drawings as they are now are the Portuguese ones (see i18n.py).
+    """
+    if i18n.language != 'pt' and f'{name}_{i18n.language}' in sprites:
+        return sprites[f'{name}_{i18n.language}']
+    return sprites.get(name)
+
+
+@dataclass
+class MapParts:
+    """The map split so each part can follow its edge of the window (see layout.py)."""
+    background: pygame.Surface
+    shop: Sprite
+    floor_row: pygame.Surface
+    stats_panel: Sprite
+
+
 class Assets:
     """Holds every image and sound in the game.
 
@@ -221,22 +240,40 @@ class Assets:
     """
 
     def __init__(self):
-        game_map = load_image('maps', 'map1.png')
-        game_map = pygame.transform.scale(game_map, (config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
         positions = load_positions()
         self.ducks = load_folder('ducks', positions)
         self.toasts = load_folder('toasts', positions)
         self.ui = load_folder('ui', positions)
-        if 'bread' in self.toasts:  # the bread drawn on its own, with the map drawn without it
+        game_map = self.load_map('map1.png')
+        self.bread_drawn = 'bread' in self.toasts
+        if self.bread_drawn:  # the bread drawn on its own, with the map drawn without it
             self.bread = self.toasts.pop('bread')
-            self.map = game_map
         else:
-            self.map, self.bread = split_bread(game_map)
+            _, self.bread = split_bread(game_map)
         self.reward_badge = cut_reward_badge(game_map)
         self.coin = cut_coin(game_map)
-        # So each part can follow its edge of the window (see layout.py)
-        self.map, self.stats_panel = cut_stats_panel(self.map)
-        self.background, self.shop, self.floor_row = split_map(self.map, self.reward_badge)
+        self.maps = {'pt': self.split(game_map)}  # one per language, made when first needed
         self.click_sound = None  # stays None when there is no audio device (e.g. Codespaces)
         if pygame.mixer.get_init():
             self.click_sound = pygame.mixer.Sound(os.path.join(config.SOUNDS_DIR, 'quack.wav'))
+
+    @staticmethod
+    def load_map(file_name):
+        game_map = load_image('maps', file_name)
+        return pygame.transform.scale(game_map, (config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
+
+    def split(self, game_map):
+        if not self.bread_drawn:
+            game_map, _ = split_bread(game_map)
+        game_map, stats_panel = cut_stats_panel(game_map)
+        background, shop, floor_row = split_map(game_map, self.reward_badge)
+        return MapParts(background, shop, floor_row, stats_panel)
+
+    def map_parts(self):
+        """The map for the current language: maps/map1_en.png in English, when it exists."""
+        language = i18n.language
+        if language not in self.maps:
+            path = os.path.join(config.IMAGES_DIR, 'maps', f'map1_{language}.png')
+            self.maps[language] = self.split(self.load_map(os.path.basename(path))) \
+                if os.path.exists(path) else self.maps['pt']
+        return self.maps[language]

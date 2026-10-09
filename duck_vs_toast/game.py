@@ -7,6 +7,7 @@ from . import config, save, shop
 from .assets import Assets
 from .clock import GameClock
 from .effects import Effects
+from .i18n import t
 from .layout import Layout
 from .numbers import format_number
 from .screen import Screen
@@ -39,6 +40,9 @@ def handle_click(event, state, assets, toast_rect, layout):
         state.next_level()
     elif clicked_circle(in_top_right, config.SOUND_BUTTON_POS, config.SOUND_BUTTON_RADIUS):
         state.toggle_mute()
+    elif clicked_circle(in_top_right, config.LANGUAGE_BUTTON_POS, config.LANGUAGE_BUTTON_RADIUS):
+        state.toggle_language()
+        pygame.display.set_caption(t('title'))
     else:
         hit_something = False
         for duck in shop.DUCKS:
@@ -55,19 +59,18 @@ def handle_click(event, state, assets, toast_rect, layout):
         assets.click_sound.play()
 
 
-def start_lines(away, earned):
-    lines = [config.TITLE, '', 'Click anywhere to play']
+def overlay_lines(screen_name, away=0, earned=0):
+    """The text of the start ('start'), pause ('paused') or victory ('victory') screen."""
+    if screen_name == 'paused':
+        return [t('paused'), '', t('press_to_continue')]
+    if screen_name == 'victory':
+        return [t('victory'), '', t('toasts_are_back'), '', t('keep_playing')]
+    lines = [t('title'), '', t('click_to_play')]
     if earned:
         hours, minutes = divmod(round(away / 60), 60)
-        time_away = f'{hours} h {minutes} min' if hours else f'{minutes} min'
-        lines[1:1] = ['', f'Welcome back! You were away for {time_away}.',
-                      f'Your ducks earned {format_number(earned)} Duckcoins.']
+        time_away = ' '.join(part for part in (hours and f'{hours} h', minutes and f'{minutes} min') if part)
+        lines[1:1] = ['', t('welcome_back', time=time_away), t('ducks_earned', amount=format_number(earned))]
     return lines
-
-
-PAUSE_LINES = ['Paused', '', 'Press Esc or click to continue']
-VICTORY_LINES = ['You beat every toast!', '',
-                 'But the toasts are back... and stronger.', '', 'Click to keep playing']
 
 
 def save_game(state):
@@ -81,7 +84,6 @@ def main():
     pygame.init()
     # The window can be resized; the game spreads out to fill it (see layout.py)
     window = pygame.display.set_mode(config.SCREEN_SIZE, pygame.RESIZABLE)
-    pygame.display.set_caption(config.TITLE)
     try:
         pygame.mixer.init()
     except pygame.error:
@@ -102,7 +104,8 @@ def main():
     if away is not None and away >= config.OFFLINE_MINIMUM_SECONDS:
         earned = save.offline_earnings(state, away)
         state.duckcoins += earned
-    overlay = start_lines(away, earned)
+    pygame.display.set_caption(t('title'))  # after loading: the save knows the language
+    overlay = 'start'  # 'start', 'paused', 'victory' or None while playing
 
     effects = Effects(clock=game_clock)
     # Clicks pop their damage number where the mouse is; automatic hits pop over the toast
@@ -134,19 +137,22 @@ def main():
                     overlay = None
                     game_clock.resume()
             elif escape:
-                overlay = PAUSE_LINES
+                overlay = 'paused'
                 game_clock.pause()
             elif clicked:
                 handle_click(event, state, assets, toast_rect, layout)
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
                 state.toggle_mute()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_l:
+                state.toggle_language()
+                pygame.display.set_caption(t('title'))
             if config.DEV_MODE and event.type == pygame.KEYDOWN and event.key == pygame.K_p:
                 state.duckcoins += config.CHEAT_DUCKCOINS
 
         if not overlay and state.has_won() and not state.victory_seen:
             state.victory_seen = True
-            overlay = VICTORY_LINES
+            overlay = 'victory'
             game_clock.pause()
 
         if pygame.time.get_ticks() - last_save >= config.AUTOSAVE_INTERVAL:
@@ -159,6 +165,7 @@ def main():
         now = game_clock()
         state.update(now)
         effects.update()
-        screen.draw(window, layout, state, effects, now, pygame.mouse.get_pos(), overlay)
+        lines = overlay_lines(overlay, away or 0, earned) if overlay else None
+        screen.draw(window, layout, state, effects, now, pygame.mouse.get_pos(), lines)
         pygame.display.update()
         clock.tick(config.FPS)

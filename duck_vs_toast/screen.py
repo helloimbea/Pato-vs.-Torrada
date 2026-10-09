@@ -1,8 +1,10 @@
 """Drawing everything that shows up on screen."""
 import pygame
 
-from . import config, shop
+from . import config, i18n, shop
+from .assets import localized
 from .effects import ease_in, outlined
+from .i18n import t
 from .numbers import format_number
 from .shop import DUCKS
 
@@ -29,14 +31,14 @@ def draw_tooltip(screen, small_font, state, mouse_pos, offset=(0, 0)):
         return
     if duck == 'bourgeois':
         center_x = config.BOURGEOIS_BUTTON_POS[0]
-        lines = [('Bourgeois Duck', config.DARK_BLUE)]
+        lines = [(t('bourgeois_duck'), config.DARK_BLUE)]
         lines += [(line, config.BLUE) for line in shop.bourgeois_description(state)]
     else:
         center_x = duck.button_pos[0]
         lines = [
             (duck.title, config.DARK_BLUE),
             (duck.describe(state), config.BLUE),
-            (f'Bought: {state.purchases[duck.name]}', config.BLUE),
+            (t('bought', count=state.purchases[duck.name]), config.BLUE),
         ]
 
     texts = [small_font.render(text, True, color) for text, color in lines]
@@ -60,9 +62,9 @@ def toast_drawing(assets, name, mood=None):
     A mood is the image "<toast>_<mood>.png" (for example nerd_toast_hurt.png) when it exists
     in assets/images/toasts; until it is drawn, the normal toast is used with a tint.
     """
-    if mood is not None and name + '_' + mood in assets.toasts:
-        return assets.toasts[name + '_' + mood], False
-    return assets.toasts.get(name), mood is not None
+    if mood is not None and localized(assets.toasts, name + '_' + mood) is not None:
+        return localized(assets.toasts, name + '_' + mood), False
+    return localized(assets.toasts, name), mood is not None
 
 
 def toast_body(assets, toast):
@@ -180,7 +182,8 @@ def build_background(assets, layout):
     _, bottom_y = layout.offsets['bottom']
 
     # Sky and floor around the toast, with the sky going up and the floor going down
-    band = stretch(assets.background, width, *config.BACKGROUND_STRETCH)
+    parts = assets.map_parts()
+    band = stretch(parts.background, width, *config.BACKGROUND_STRETCH)
     background.blit(band, (0, center_y))
     if center_y:
         top_row = band.subsurface((0, 0, width, 1))
@@ -188,10 +191,10 @@ def build_background(assets, layout):
     floor_top = center_y + band.get_height()
     shop_top = bottom_y + config.SHOP_TOP
     if shop_top > floor_top:
-        floor_row = stretch(assets.floor_row, width, *config.BACKGROUND_STRETCH)
+        floor_row = stretch(parts.floor_row, width, *config.BACKGROUND_STRETCH)
         background.blit(pygame.transform.scale(floor_row, (width, shop_top - floor_top)), (0, floor_top))
 
-    shop = stretch(assets.shop.image, width, *config.SHOP_STRETCH)
+    shop = stretch(parts.shop.image, width, *config.SHOP_STRETCH)
     background.blit(shop, (0, shop_top))
     return background
 
@@ -204,20 +207,20 @@ def draw_center(screen, font, assets, state, effects, now):
 
     # Bought ducks, toast and starter duck
     for name in state.ducks_on_screen:
-        draw_duck(screen, assets.ducks[name], effects.duck_scale(name))
+        draw_duck(screen, localized(assets.ducks, name), effects.duck_scale(name))
     draw_toast(screen, assets, state, effects)
-    assets.ducks['starter_duck'].draw(screen)
+    localized(assets.ducks, 'starter_duck').draw(screen)
 
     write(screen, font, format_number(round(state.health)), config.RED, config.HEALTH_TEXT_POS)
     reward_color = config.BOOST_COLOR if state.is_boosted() else config.GREEN
     write(screen, font, format_number(state.current_reward()), reward_color, config.REWARD_TEXT_POS)
 
     if state.has_auto_click:
-        assets.ui['auto_click_pointer'].draw(screen)
+        localized(assets.ui, 'auto_click_pointer').draw(screen)
 
     if state.is_boss():
         write(screen, font, f' {state.boss_time_left(now)}', config.TIMER_BLUE, config.BOSS_TIMER_TEXT_POS)
-        assets.ui['boss_timer_box'].draw(screen)
+        localized(assets.ui, 'boss_timer_box').draw(screen)
 
 
 def draw_stats(screen, font, state):
@@ -230,13 +233,14 @@ def draw_stats(screen, font, state):
 
 
 def draw_level_buttons(screen, font, assets, state):
-    """Level, level buttons and sound button (top right)."""
+    """Level, level buttons, sound and language buttons (top right)."""
     level_image = 'level_advance_on' if state.level_advance else 'level_advance_off'
-    assets.ui[level_image].draw(screen)
+    localized(assets.ui, level_image).draw(screen)
     write(screen, font, f'{state.level}', config.LIGHT_BLUE, config.LEVEL_TEXT_POS)
     next_image = 'next_level_on' if state.can_go_to_next_level() else 'next_level_off'
-    assets.ui[next_image].draw(screen)
-    assets.ui['sound_off' if state.muted else 'sound_on'].draw(screen)
+    localized(assets.ui, next_image).draw(screen)
+    localized(assets.ui, 'sound_off' if state.muted else 'sound_on').draw(screen)
+    localized(assets.ui, 'language_' + i18n.language).draw(screen)
 
 
 def draw_shop(screen, font, small_font, assets, state):
@@ -247,12 +251,12 @@ def draw_shop(screen, font, small_font, assets, state):
     # Ducks the player can't afford yet are shown as "locked"
     for duck in DUCKS:
         if state.duckcoins < state.costs[duck.name]:
-            assets.ducks[duck.locked_image].draw(screen)
+            localized(assets.ducks, duck.locked_image).draw(screen)
 
     # Bourgeois Duck: fixed price; after buying it, a boost and then a recharge time
     write(screen, font, format_number(config.BOURGEOIS_COST), config.BLUE, config.BOURGEOIS_COST_TEXT_POS)
     if not shop.can_buy_bourgeois(state):
-        assets.ducks['locked_bourgeois_duck'].draw(screen)
+        localized(assets.ducks, 'locked_bourgeois_duck').draw(screen)
     if state.is_boosted():
         timer, color = state.boost_time_left(), config.BOOST_COLOR
     else:
@@ -308,9 +312,9 @@ class Screen:
     def draw(self, window, layout, state, effects, now, mouse_pos, overlay=None):
         """overlay: the lines of a start/pause/victory screen to show over the game, or None."""
         assets, font = self.assets, self.font
-        if self.background_size != layout.size:  # the window was resized
+        if self.background_size != (layout.size, i18n.language):  # resized, or language changed
             self.background = build_background(assets, layout)
-            self.background_size = layout.size
+            self.background_size = (layout.size, i18n.language)
             self.canvas = pygame.Surface(layout.size)
         # At the original size the game is drawn straight to the window, without scaling
         canvas = window if window.get_size() == layout.size else self.canvas
@@ -319,7 +323,7 @@ class Screen:
         part = {group: canvas.subsurface(pygame.Rect(offset, config.SCREEN_SIZE))
                 for group, offset in layout.offsets.items()}
 
-        assets.stats_panel.draw(part['top_left'])
+        assets.map_parts().stats_panel.draw(part['top_left'])
         draw_center(part['center'], font, assets, state, effects, now)
         draw_stats(part['top_left'], font, state)
         draw_level_buttons(part['top_right'], font, assets, state)

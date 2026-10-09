@@ -3,7 +3,8 @@
 To create a new duck:
   1. put its image (and its "locked_" version) in assets/images/ducks;
   2. write an effect function (like the ones below);
-  3. write a description function for the tooltip;
+  3. write a description function for the tooltip, and its name and text in i18n.py
+     (in English and Portuguese, under the duck's name);
   4. add a Duck to the DUCKS list.
 """
 import math
@@ -11,6 +12,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from . import config
+from .i18n import t
 from .numbers import format_number
 
 
@@ -21,9 +23,13 @@ class Duck:
     cost_multiplier: float   # the cost is multiplied by this after each purchase
     button_pos: tuple        # center of the buy button
     cost_text_pos: tuple     # where the cost is written
-    title: str               # name shown in the tooltip
     effect: Callable         # function that receives the game state
     describe: Callable       # returns the tooltip text (what the next purchase does)
+
+    @property
+    def title(self):
+        """Name shown in the tooltip, in the current language (see i18n.py)."""
+        return t(self.name)
 
     @property
     def locked_image(self):
@@ -58,32 +64,32 @@ def realistic_duck_effect(state):
 # --- Tooltip texts ---
 
 def siamese_duck_description(state):
-    return f'Adds {format_number(state.dps_base)} damage per second.'
+    return t('siamese_duck_effect', dps=format_number(state.dps_base))
 
 
 def double_duck_description(state):
-    return f'Doubles your click damage ({format_number(state.damage)} -> {format_number(state.damage * 2)}).'
+    return t('double_duck_effect', now=format_number(state.damage), next=format_number(state.damage * 2))
 
 
 def muscular_duck_description(state):
     interval = state.auto_click_interval
     if interval > config.AUTO_CLICK_INTERVAL_MIN:  # same rule as muscular_duck_effect
         interval -= config.AUTO_CLICK_INTERVAL_STEP
-    return f'Clicks the toast for you every {interval / 1000:g} s, with your click damage.'
+    return t('muscular_duck_effect', seconds=f'{interval / 1000:g}')
 
 
 def realistic_duck_description(state):
-    return f'Doubles all damage per second ({format_number(state.dps)} -> {format_number(state.dps * 2)}).'
+    return t('realistic_duck_effect', now=format_number(state.dps), next=format_number(state.dps * 2))
 
 
 DUCKS = [
-    Duck('siamese_duck', 200, 1.5, (157, 605), (119, 675), 'Siamese Duck',
+    Duck('siamese_duck', 200, 1.5, (157, 605), (119, 675),
          siamese_duck_effect, siamese_duck_description),
-    Duck('double_duck', 5000, 3, (399, 603), (381, 675), 'Double Duck',
+    Duck('double_duck', 5000, 3, (399, 603), (381, 675),
          double_duck_effect, double_duck_description),
-    Duck('muscular_duck', 50000, 2, (641, 603), (616, 675), 'Muscular Duck',
+    Duck('muscular_duck', 50000, 2, (641, 603), (616, 675),
          muscular_duck_effect, muscular_duck_description),
-    Duck('realistic_duck', 200000, 4, (883, 603), (863, 675), 'Realistic Duck',
+    Duck('realistic_duck', 200000, 4, (883, 603), (863, 675),
          realistic_duck_effect, realistic_duck_description),
 ]
 
@@ -130,13 +136,12 @@ def format_time(milliseconds):
 
 def bourgeois_description(state):
     """Tooltip lines for the Bourgeois Duck."""
-    lines = [f'For {config.BOURGEOIS_DURATION / 60000:g} min: '
-             f'x{config.BOURGEOIS_DAMAGE_MULTIPLIER} damage and '
-             f'x{config.BOURGEOIS_REWARD_MULTIPLIER} Duckcoins.']
+    lines = [t('bourgeois_duck_effect', minutes=f'{config.BOURGEOIS_DURATION / 60000:g}',
+               damage=config.BOURGEOIS_DAMAGE_MULTIPLIER, coins=config.BOURGEOIS_REWARD_MULTIPLIER)]
     if state.is_boosted():
-        lines.append(f'Active! {format_time(state.boost_time_left())} left.')
+        lines.append(t('bourgeois_active', time=format_time(state.boost_time_left())))
     if state.bourgeois_recharge_left():
-        lines.append(f'Recharging: ready in {format_time(state.bourgeois_recharge_left())}.')
+        lines.append(t('bourgeois_recharging', time=format_time(state.bourgeois_recharge_left())))
     else:
-        lines.append(f'Recharges for {config.BOURGEOIS_COOLDOWN // 60000} min after buying.')
+        lines.append(t('bourgeois_recharge_info', minutes=f'{config.BOURGEOIS_COOLDOWN / 60000:g}'))
     return lines

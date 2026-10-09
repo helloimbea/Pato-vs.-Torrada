@@ -14,7 +14,6 @@ POSITIONS_FILE = os.path.join(IMAGES_DIR, 'positions.json')  # where each croppe
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 SCREEN_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)  # the size the art is drawn at
-TITLE = 'Duck vs. Toast'
 FONT_SIZE = 48
 SMALL_FONT_SIZE = 28  # purchase counters and tooltips
 FPS = 30  # frame rate limit
@@ -56,6 +55,8 @@ NEXT_LEVEL_BUTTON_POS = (1203, 79)
 NEXT_LEVEL_BUTTON_RADIUS = 20
 SOUND_BUTTON_POS = (1252, 26)
 SOUND_BUTTON_RADIUS = 18
+LANGUAGE_BUTTON_POS = (1252, 70)
+LANGUAGE_BUTTON_RADIUS = 18
 SHOP_BUTTON_RADIUS = 40
 
 # --- Shop extras ---
