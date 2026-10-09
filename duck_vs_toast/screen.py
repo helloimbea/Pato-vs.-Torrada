@@ -1,8 +1,8 @@
 """Drawing everything that shows up on screen."""
 import pygame
 
-from . import config
-from .effects import ease_in
+from . import config, shop
+from .effects import ease_in, outlined
 from .numbers import format_number
 from .shop import DUCKS
 
@@ -12,7 +12,7 @@ def write(screen, font, text, color, position):
 
 
 def hovered_duck(mouse_pos):
-    """The duck whose buy button is under the mouse ('bourgeois' for the coming-soon one), or None."""
+    """The duck whose buy button is under the mouse ('bourgeois' for the Bourgeois Duck), or None."""
     mouse = pygame.math.Vector2(mouse_pos)
     for duck in DUCKS:
         if mouse.distance_to(duck.button_pos) < config.SHOP_BUTTON_RADIUS:
@@ -29,7 +29,8 @@ def draw_tooltip(screen, small_font, state, mouse_pos, offset=(0, 0)):
         return
     if duck == 'bourgeois':
         center_x = config.BOURGEOIS_BUTTON_POS[0]
-        lines = [('Bourgeois Duck', config.DARK_BLUE), ('Coming soon!', config.BLUE)]
+        lines = [('Bourgeois Duck', config.DARK_BLUE)]
+        lines += [(line, config.BLUE) for line in shop.bourgeois_description(state)]
     else:
         center_x = duck.button_pos[0]
         lines = [
@@ -208,7 +209,8 @@ def draw_center(screen, font, assets, state, effects, now):
     assets.ducks['starter_duck'].draw(screen)
 
     write(screen, font, format_number(round(state.health)), config.RED, config.HEALTH_TEXT_POS)
-    write(screen, font, format_number(state.reward), config.GREEN, config.REWARD_TEXT_POS)
+    reward_color = config.BOOST_COLOR if state.is_boosted() else config.GREEN
+    write(screen, font, format_number(state.current_reward()), reward_color, config.REWARD_TEXT_POS)
 
     if state.has_auto_click:
         assets.ui['auto_click_pointer'].draw(screen)
@@ -221,8 +223,10 @@ def draw_center(screen, font, assets, state, effects, now):
 def draw_stats(screen, font, state):
     """Duckcoins, damage per second and click damage (top left)."""
     write(screen, font, format_number(state.duckcoins), config.LIGHT_BLUE, config.DUCKCOINS_TEXT_POS)
-    write(screen, font, format_number(state.dps), config.LIGHT_BLUE, config.DPS_TEXT_POS)
-    write(screen, font, format_number(state.damage), config.LIGHT_BLUE, config.DAMAGE_TEXT_POS)
+    # While the Bourgeois Duck's boost is on, the boosted numbers are shown in gold
+    color = config.BOOST_COLOR if state.is_boosted() else config.LIGHT_BLUE
+    write(screen, font, format_number(state.current_dps()), color, config.DPS_TEXT_POS)
+    write(screen, font, format_number(state.click_damage()), color, config.DAMAGE_TEXT_POS)
 
 
 def draw_level_buttons(screen, font, assets, state):
@@ -244,7 +248,18 @@ def draw_shop(screen, font, small_font, assets, state):
     for duck in DUCKS:
         if state.duckcoins < state.costs[duck.name]:
             assets.ducks[duck.locked_image].draw(screen)
-    assets.ducks['locked_bourgeois_duck'].draw(screen)  # bourgeois duck: coming soon
+
+    # Bourgeois Duck: fixed price; after buying it, a boost and then a recharge time
+    write(screen, font, format_number(config.BOURGEOIS_COST), config.BLUE, config.BOURGEOIS_COST_TEXT_POS)
+    if not shop.can_buy_bourgeois(state):
+        assets.ducks['locked_bourgeois_duck'].draw(screen)
+    if state.is_boosted():
+        timer, color = state.boost_time_left(), config.BOOST_COLOR
+    else:
+        timer, color = state.bourgeois_recharge_left(), config.DARK_BLUE
+    if timer:
+        text = outlined(font, shop.format_time(timer), color)
+        screen.blit(text, text.get_rect(center=config.BOURGEOIS_BUTTON_POS))
 
     for duck in DUCKS:
         count = state.purchases[duck.name]
@@ -254,6 +269,30 @@ def draw_shop(screen, font, small_font, assets, state):
             write(screen, small_font, f'x{count}', config.DARK_BLUE, (x + dx, y + dy))
 
 
+def draw_overlay(screen, title_font, font, lines):
+    """A start, pause or victory screen: the game darkened, with a box of text in the middle.
+
+    The first line is the title; an empty line leaves a gap.
+    """
+    shade = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
+    shade.fill(config.OVERLAY_COLOR)
+    screen.blit(shade, (0, 0))
+
+    texts = [title_font.render(lines[0], True, config.DARK_BLUE)]
+    texts += [font.render(line, True, config.BLUE) for line in lines[1:]]
+    padding = 40
+    width = max(text.get_width() for text in texts) + 2 * padding
+    height = sum(text.get_height() + 10 for text in texts) + 2 * padding
+    box = pygame.Rect(0, 0, width, height)
+    box.center = screen.get_rect().center
+    pygame.draw.rect(screen, config.TOOLTIP_BACKGROUND, box, border_radius=20)
+    pygame.draw.rect(screen, config.BLUE, box, width=3, border_radius=20)
+    y = box.top + padding
+    for text in texts:
+        screen.blit(text, text.get_rect(midtop=(box.centerx, y)))
+        y += text.get_height() + 10
+
+
 class Screen:
     """Draws the game in a window of any size (see layout.py for where each part goes)."""
 
@@ -261,11 +300,13 @@ class Screen:
         self.assets = assets
         self.font = font
         self.small_font = small_font
+        self.title_font = pygame.font.SysFont(None, config.TITLE_FONT_SIZE)
         self.background = None
         self.background_size = None
         self.canvas = None
 
-    def draw(self, window, layout, state, effects, now, mouse_pos):
+    def draw(self, window, layout, state, effects, now, mouse_pos, overlay=None):
+        """overlay: the lines of a start/pause/victory screen to show over the game, or None."""
         assets, font = self.assets, self.font
         if self.background_size != layout.size:  # the window was resized
             self.background = build_background(assets, layout)
@@ -285,8 +326,11 @@ class Screen:
         draw_shop(part['bottom'], font, self.small_font, assets, state)
         effects.draw(canvas, font, assets.coin, offset=layout.offsets['center'],
                      coin_target=config.DUCKCOINS_ICON_POS)
-        draw_tooltip(canvas, self.small_font, state, layout.to_group('bottom', mouse_pos),
-                     layout.offsets['bottom'])
+        if overlay:
+            draw_overlay(canvas, self.title_font, font, overlay)
+        else:
+            draw_tooltip(canvas, self.small_font, state, layout.to_group('bottom', mouse_pos),
+                         layout.offsets['bottom'])
 
         if canvas is not window:
             pygame.transform.smoothscale(canvas, window.get_size(), window)

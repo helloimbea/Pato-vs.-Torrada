@@ -3,10 +3,12 @@ import sys
 
 import pygame
 
-from . import config, shop
+from . import config, save, shop
 from .assets import Assets
+from .clock import GameClock
 from .effects import Effects
 from .layout import Layout
+from .numbers import format_number
 from .screen import Screen
 from .state import GameState
 
@@ -28,7 +30,7 @@ def handle_click(event, state, assets, toast_rect, layout):
 
     hit_something = True
     if toast_rect.collidepoint(in_center):
-        state.deal_damage(state.damage)
+        state.deal_damage(state.click_damage())
     elif clicked_circle(in_top_right, config.LEVEL_ADVANCE_BUTTON_POS, config.LEVEL_ADVANCE_BUTTON_RADIUS):
         state.toggle_level_advance()
     elif clicked_circle(in_top_right, config.PREVIOUS_LEVEL_BUTTON_POS, config.PREVIOUS_LEVEL_BUTTON_RADIUS):
@@ -44,10 +46,35 @@ def handle_click(event, state, assets, toast_rect, layout):
                 shop.buy(state, duck)
                 hit_something = True
                 break
+        if clicked_circle(in_shop, config.BOURGEOIS_BUTTON_POS, config.SHOP_BUTTON_RADIUS):
+            shop.buy_bourgeois(state)
+            hit_something = True
 
     # Quack only when the click hit the toast or a button
     if hit_something and assets.click_sound and not state.muted:
         assets.click_sound.play()
+
+
+def start_lines(away, earned):
+    lines = [config.TITLE, '', 'Click anywhere to play']
+    if earned:
+        hours, minutes = divmod(round(away / 60), 60)
+        time_away = f'{hours} h {minutes} min' if hours else f'{minutes} min'
+        lines[1:1] = ['', f'Welcome back! You were away for {time_away}.',
+                      f'Your ducks earned {format_number(earned)} Duckcoins.']
+    return lines
+
+
+PAUSE_LINES = ['Paused', '', 'Press Esc or click to continue']
+VICTORY_LINES = ['You beat every toast!', '',
+                 'But the toasts are back... and stronger.', '', 'Click to keep playing']
+
+
+def save_game(state):
+    try:
+        save.save(state)
+    except OSError as error:  # e.g. no permission to write: keep playing anyway
+        print(f'Could not save the game: {error}')
 
 
 def main():
@@ -66,39 +93,72 @@ def main():
     screen = Screen(assets, font, small_font)
     layout = Layout(window.get_size())
     toast_rect = pygame.Rect(config.TOAST_RECT)
-    state = GameState()
-    effects = Effects()
+
+    # The game clock stops while a start/pause/victory screen is up (see clock.py)
+    game_clock = GameClock(paused=True)
+    state = GameState(clock=game_clock)
+    away = save.load(state)
+    earned = 0
+    if away is not None and away >= config.OFFLINE_MINIMUM_SECONDS:
+        earned = save.offline_earnings(state, away)
+        state.duckcoins += earned
+    overlay = start_lines(away, earned)
+
+    effects = Effects(clock=game_clock)
     # Clicks pop their damage number where the mouse is; automatic hits pop over the toast
     state.on_hit = lambda amount, kind: effects.hit(
         amount, kind, layout.to_group('center', pygame.mouse.get_pos()) if kind == 'click' else None)
     state.on_defeat = lambda: effects.defeat(state.toast)  # still the beaten toast here
     state.on_buy = effects.duck_bought
     mouse_button_down = False
+    last_save = pygame.time.get_ticks()
     clock = pygame.time.Clock()
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                save_game(state)
                 pygame.quit()
                 sys.exit()
 
-            if event.type == pygame.MOUSEBUTTONDOWN and not mouse_button_down:
+            clicked = event.type == pygame.MOUSEBUTTONDOWN and not mouse_button_down \
+                and event.button == 1
+            if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_button_down = True
-                handle_click(event, state, assets, toast_rect, layout)
             elif event.type == pygame.MOUSEBUTTONUP:
                 mouse_button_down = False
+            escape = event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
+
+            if overlay:  # start, pause or victory screen: a click (or Esc) goes back to the game
+                if clicked or escape:
+                    overlay = None
+                    game_clock.resume()
+            elif escape:
+                overlay = PAUSE_LINES
+                game_clock.pause()
+            elif clicked:
+                handle_click(event, state, assets, toast_rect, layout)
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
                 state.toggle_mute()
             if config.DEV_MODE and event.type == pygame.KEYDOWN and event.key == pygame.K_p:
                 state.duckcoins += config.CHEAT_DUCKCOINS
 
+        if not overlay and state.has_won() and not state.victory_seen:
+            state.victory_seen = True
+            overlay = VICTORY_LINES
+            game_clock.pause()
+
+        if pygame.time.get_ticks() - last_save >= config.AUTOSAVE_INTERVAL:
+            save_game(state)
+            last_save = pygame.time.get_ticks()
+
         window = pygame.display.get_surface()
         if window.get_size() != layout.window_size:
             layout = Layout(window.get_size())
-        now = pygame.time.get_ticks()
+        now = game_clock()
         state.update(now)
         effects.update()
-        screen.draw(window, layout, state, effects, now, pygame.mouse.get_pos())
+        screen.draw(window, layout, state, effects, now, pygame.mouse.get_pos(), overlay)
         pygame.display.update()
         clock.tick(config.FPS)

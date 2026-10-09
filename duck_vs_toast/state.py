@@ -39,8 +39,14 @@ class GameState:
         self.ducks_on_screen = []
         self.purchases = {duck.name: 0 for duck in DUCKS}
 
+        # Bourgeois Duck: a boost for a while, then it has to recharge (times from clock())
+        self.boost_end = None       # when the current boost ends
+        self.bourgeois_ready = None  # when it can be bought again
+        self.bourgeois_purchases = 0
+
         # Settings
         self.muted = False
+        self.victory_seen = False  # the "you beat every toast" screen shows only once
 
         # Called when a toast is hit / beaten, so the screen can animate it (see effects.py)
         self.on_hit = lambda _amount, _kind: None
@@ -85,6 +91,41 @@ class GameState:
     def toggle_mute(self):
         self.muted = not self.muted
 
+    def has_won(self):
+        """True once every toast has been beaten (after that they come back, stronger)."""
+        return self.highest_level >= len(levels.TOASTS) * config.BOSS_EVERY_N_LEVELS
+
+    # --- Bourgeois Duck ---
+
+    def is_boosted(self):
+        return self.boost_end is not None and self.clock() < self.boost_end
+
+    def boost_time_left(self):
+        """Milliseconds left of the Bourgeois Duck's boost (0 when not boosted)."""
+        return max(0, self.boost_end - self.clock()) if self.boost_end is not None else 0
+
+    def bourgeois_recharge_left(self):
+        """Milliseconds before the Bourgeois Duck can be bought again (0 when it can)."""
+        return max(0, self.bourgeois_ready - self.clock()) if self.bourgeois_ready is not None else 0
+
+    def damage_multiplier(self):
+        return config.BOURGEOIS_DAMAGE_MULTIPLIER if self.is_boosted() else 1
+
+    def reward_multiplier(self):
+        return config.BOURGEOIS_REWARD_MULTIPLIER if self.is_boosted() else 1
+
+    def click_damage(self):
+        """Damage of a click (and of the muscular duck), with the Bourgeois boost."""
+        return self.damage * self.damage_multiplier()
+
+    def current_dps(self):
+        """Damage per second, with the Bourgeois boost."""
+        return self.dps * self.damage_multiplier()
+
+    def current_reward(self):
+        """Duckcoins for beating the current toast, with the Bourgeois boost."""
+        return self.reward * self.reward_multiplier()
+
     # --- Combat ---
 
     def deal_damage(self, amount, kind='click'):
@@ -99,7 +140,7 @@ class GameState:
     def defeat_toast(self):
         """Give the reward and move on to the next toast (or repeat the level)."""
         self.on_defeat()
-        self.duckcoins += self.reward
+        self.duckcoins += self.current_reward()
         self.highest_level = max(self.highest_level, self.level + 1)
         if self.level_advance:
             self.level += 1
@@ -127,13 +168,13 @@ class GameState:
             hit, self.last_auto_click = self.interval_passed(
                 now, self.last_auto_click, self.auto_click_interval)
             if hit:
-                self.deal_damage(self.damage, 'auto')
+                self.deal_damage(self.click_damage(), 'auto')
 
         # Damage per second
         if self.dps > 0:
             hit, self.last_dps = self.interval_passed(now, self.last_dps, config.DPS_INTERVAL)
             if hit:
-                self.deal_damage(self.dps, 'dps')
+                self.deal_damage(self.current_dps(), 'dps')
 
         # If the boss timer runs out, the boss gets all its health back
         if self.is_boss() and now - self.boss_start >= config.BOSS_TIME_LIMIT and self.health > 0:

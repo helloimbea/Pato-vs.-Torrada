@@ -37,6 +37,7 @@ GREEN = (114, 167, 139)
 TIMER_BLUE = (108, 137, 244)
 DARK_BLUE = (62, 84, 110)
 TOOLTIP_BACKGROUND = (240, 246, 252)
+BOOST_COLOR = (240, 170, 50)  # numbers boosted by the Bourgeois Duck
 
 # --- Toast (clickable area) ---
 TOAST_RECT = (510, 201, 260, 242)  # x, y, width, height
@@ -109,6 +110,24 @@ BOSS_TIME_LIMIT = 10000
 STARTING_DAMAGE = 1
 STARTING_DPS_BASE = 12.5  # DPS added by each Siamese duck
 BOSS_EVERY_N_LEVELS = 5
+
+# --- Bourgeois Duck ---
+BOURGEOIS_COST = 10_000_000          # fixed price (it doesn't go up)
+BOURGEOIS_DURATION = 60_000          # the boost lasts 1 minute...
+BOURGEOIS_COOLDOWN = 600_000         # ...and it can be bought again 10 minutes after buying
+BOURGEOIS_DAMAGE_MULTIPLIER = 2      # all damage (clicks, DPS, muscular duck) while boosted
+BOURGEOIS_REWARD_MULTIPLIER = 2      # Duckcoins from each toast while boosted
+BOURGEOIS_COST_TEXT_POS = (1105, 675)
+
+# --- Saving and offline earnings ---
+SAVE_FILE = os.path.join(os.path.expanduser('~'), '.duck_vs_toast', 'save.json')
+AUTOSAVE_INTERVAL = 30_000           # the game also saves when it is closed
+OFFLINE_LIMIT_HOURS = 8              # Duckcoins are earned for at most this long while closed
+OFFLINE_MINIMUM_SECONDS = 60         # shorter breaks don't show the "welcome back" message
+
+# --- Screens ---
+TITLE_FONT_SIZE = 80
+OVERLAY_COLOR = (40, 55, 80, 150)    # darkens the game behind the start/pause/victory screens
 
 # --- Developer mode ---
 # Turn on while developing: enables the P cheat and prints where the mouse clicked
