@@ -8,6 +8,7 @@ import os
 GAME_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMAGES_DIR = os.path.join(GAME_DIR, 'assets', 'images')
 SOUNDS_DIR = os.path.join(GAME_DIR, 'assets', 'sounds')
+POSITIONS_FILE = os.path.join(IMAGES_DIR, 'positions.json')  # where each cropped image goes
 
 # --- Screen ---
 SCREEN_WIDTH = 1280

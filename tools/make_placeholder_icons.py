@@ -1,8 +1,8 @@
 """Draw the placeholder icons for the sound and next level buttons.
 
 They are temporary: replace the PNG files in assets/images/ui with your own
-drawings whenever you like (same file names, 1280x720 like the other UI images,
-with the icon drawn at the position set in duck_vs_toast/config.py).
+drawings whenever you like (same file names, drawn on a 1280x720 canvas with the
+icon at the position set in duck_vs_toast/config.py, then run tools.crop_images).
 
     python -m tools.make_placeholder_icons
 """
@@ -11,6 +11,7 @@ import os
 import pygame
 
 from duck_vs_toast import config
+from tools import crop_images
 
 BUTTON_BLUE = (136, 167, 200)
 WHITE = (255, 255, 255)
@@ -58,6 +59,7 @@ def main():
         path = os.path.join(UI_DIR, name + '.png')
         pygame.image.save(surface, path)
         print('Saved', path)
+    crop_images.main()  # cut them down to the icon and save where they go
 
 
 if __name__ == '__main__':
