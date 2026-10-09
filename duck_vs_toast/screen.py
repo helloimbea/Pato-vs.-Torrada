@@ -51,6 +51,45 @@ def draw_tooltip(screen, small_font, state, mouse_pos):
         y += text.get_height()
 
 
+def draw_toast(screen, assets, state, effects):
+    """The bread slice and the toast's face, flinching when hit: they shake, squash and look hurt.
+
+    The pained face is the image "<toast>_hurt.png" (for example nerd_toast_hurt.png) when it
+    exists in assets/images/toasts; until it is drawn, the toast turns reddish instead.
+    """
+    hurt = effects.is_hurt()
+    image = assets.toasts.get(state.toast + '_hurt') if hurt else None
+    tint = hurt and image is None
+    if image is None:
+        image = assets.toasts.get(state.toast)
+
+    # The toast's name (top of its image) stays still; the bread and the face move together
+    body = assets.bread.get_bounding_rect()
+    if image is not None:
+        title = pygame.Rect(0, 0, config.SCREEN_WIDTH, config.TOAST_TITLE_BOTTOM)
+        screen.blit(image, title, title)
+        face = image.get_bounding_rect().clip(
+            pygame.Rect(0, config.TOAST_TITLE_BOTTOM, config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
+        body = body.union(face) if face.width else body
+    body_image = pygame.Surface(body.size, pygame.SRCALPHA)
+    body_image.blit(assets.bread, (0, 0), body)
+    if image is not None:
+        body_image.blit(image, (0, 0), body)
+
+    squish = effects.squish()
+    if squish:
+        size = (round(body.width * (1 + config.SQUISH_WIDTH * squish)),
+                round(body.height * (1 - config.SQUISH_HEIGHT * squish)))
+        body_image = pygame.transform.smoothscale(body_image, size)
+    if tint:
+        body_image.fill(config.HURT_TINT + (255,), special_flags=pygame.BLEND_RGBA_MULT)
+
+    dx, dy = effects.toast_offset()
+    # Squashing keeps the toast's feet on the ground (bottom center stays in place)
+    screen.blit(body_image, body_image.get_rect(midbottom=(body.centerx + dx, body.bottom + dy)))
+    screen.blit(assets.reward_badge, (0, 0))
+
+
 def draw(screen, font, small_font, assets, state, effects, now, mouse_pos):
     # The duck, toast and UI images are screen-sized,
     # so they are all drawn at position (0, 0).
@@ -64,8 +103,7 @@ def draw(screen, font, small_font, assets, state, effects, now, mouse_pos):
     # Bought ducks, toast and starter duck
     for name in state.ducks_on_screen:
         screen.blit(assets.ducks[name], (0, 0))
-    if state.toast in assets.toasts:
-        screen.blit(assets.toasts[state.toast], effects.toast_offset())
+    draw_toast(screen, assets, state, effects)
     screen.blit(assets.ducks['starter_duck'], (0, 0))
 
     # Status texts

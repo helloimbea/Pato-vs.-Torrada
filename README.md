@@ -113,6 +113,7 @@ Pato-vs.-Torrada/
 - Add a new duck → `duck_vs_toast/shop.py` (plus its images in `assets/images/ducks/`)
 - Move a button/text or change a color, timer or the FPS limit → `duck_vs_toast/config.py`
 - Make the animations faster, slower or stronger → the "Animations" section of `duck_vs_toast/config.py`
+- Give a toast a pained face when it gets hit → draw `<toast name>_hurt.png` (for example `nerd_toast_hurt.png`) in `assets/images/toasts/`, 1280×720 like the normal one; until then the toast just turns reddish
 - Change a duck's tooltip text → its `..._description` function in `duck_vs_toast/shop.py`
 - Replace the temporary icons (`sound_on`, `sound_off`, `next_level_on`, `next_level_off` in `assets/images/ui/`) → draw your own 1280×720 images with the same names, with the icon in the same spot
 

@@ -78,3 +78,17 @@ def test_coins_fly_to_the_duckcoins_counter(effects):
     clock.now = fx.coins[-1].start + config.COIN_BURST_TIME + config.COIN_FLIGHT_TIME
     fx.update()
     assert fx.coins == []
+
+
+def test_toast_flinches_and_looks_hurt_after_any_hit(effects):
+    fx, clock = effects
+    clock.now = 1000
+    assert fx.squish() == 0 and not fx.is_hurt()
+    fx.hit(12.5, 'dps')
+    clock.now += config.SQUISH_DURATION // 2
+    assert fx.squish() == pytest.approx(1)  # most squashed halfway through
+    assert fx.is_hurt()
+    clock.now = 1000 + config.SQUISH_DURATION
+    assert fx.squish() == 0
+    clock.now = 1000 + config.HURT_DURATION
+    assert not fx.is_hurt()

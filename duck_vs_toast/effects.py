@@ -1,7 +1,7 @@
 """Little animations that make hitting toasts feel good.
 
 - damage numbers that float up and fade out after each hit;
-- the toast shaking when it gets hit;
+- the toast shaking, squishing and making a pained face when it gets hit;
 - coins flying to the Duckcoins counter when a toast is beaten.
 
 The game state tells this module what happened (GameState.on_hit and
@@ -40,6 +40,7 @@ class Effects:
         self.damage_numbers = []
         self.coins = []
         self.shake_start = -config.SHAKE_DURATION
+        self.squish_start = -config.HURT_DURATION
 
     # --- Things that happened in the game ---
 
@@ -58,6 +59,7 @@ class Effects:
         del self.damage_numbers[:-config.MAX_DAMAGE_NUMBERS]
         if kind != 'dps':  # the toast shakes on clicks; DPS ticks would keep it shaking forever
             self.shake_start = now
+        self.squish_start = now  # every hit makes it flinch (DPS only once per second)
 
     def defeat(self):
         """A toast was beaten: send coins flying to the Duckcoins counter."""
@@ -78,6 +80,17 @@ class Effects:
             return 0, 0
         strength = config.SHAKE_STRENGTH * (1 - elapsed / config.SHAKE_DURATION)
         return round(math.sin(elapsed / 15) * strength), round(math.cos(elapsed / 20) * strength / 2)
+
+    def squish(self):
+        """How squashed the toast is: 0 = normal, 1 = fully squashed. It squashes fast and springs back."""
+        elapsed = self.clock() - self.squish_start
+        if elapsed >= config.SQUISH_DURATION:
+            return 0
+        return math.sin(math.pi * elapsed / config.SQUISH_DURATION)
+
+    def is_hurt(self):
+        """True right after a hit, while the toast shows its pained face."""
+        return self.clock() - self.squish_start < config.HURT_DURATION
 
     def coin_position(self, coin, now):
         """Where a coin is: first a quick burst out of the toast, then a flight to the counter."""
