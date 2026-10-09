@@ -220,9 +220,10 @@ def draw_center(screen, font, assets, state, effects, now):
         assets.ui['boss_timer_box'].draw(screen)
 
 
-def draw_stats(screen, font, state):
+def draw_stats(screen, font, state, effects):
     """Duckcoins, damage per second and click damage (top left)."""
-    write(screen, font, format_number(state.duckcoins), config.LIGHT_BLUE, config.DUCKCOINS_TEXT_POS)
+    shown = state.duckcoins if effects.shown_duckcoins is None else round(effects.shown_duckcoins)
+    write(screen, font, format_number(shown), config.LIGHT_BLUE, config.DUCKCOINS_TEXT_POS)
     # While the Bourgeois Duck's boost is on, the boosted numbers are shown in gold
     color = config.BOOST_COLOR if state.is_boosted() else config.LIGHT_BLUE
     write(screen, font, format_number(state.current_dps()), color, config.DPS_TEXT_POS)
@@ -321,7 +322,7 @@ class Screen:
 
         assets.stats_panel.draw(part['top_left'])
         draw_center(part['center'], font, assets, state, effects, now)
-        draw_stats(part['top_left'], font, state)
+        draw_stats(part['top_left'], font, state, effects)
         draw_level_buttons(part['top_right'], font, assets, state)
         draw_shop(part['bottom'], font, self.small_font, assets, state)
         effects.draw(canvas, font, assets.coin, offset=layout.offsets['center'],

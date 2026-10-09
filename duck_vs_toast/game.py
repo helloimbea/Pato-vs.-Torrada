@@ -158,7 +158,7 @@ def main():
             layout = Layout(window.get_size())
         now = game_clock()
         state.update(now)
-        effects.update()
+        effects.update(state.duckcoins)
         screen.draw(window, layout, state, effects, now, pygame.mouse.get_pos(), overlay)
         pygame.display.update()
         clock.tick(config.FPS)
