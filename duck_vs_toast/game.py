@@ -5,6 +5,7 @@ import pygame
 
 from . import config, shop
 from .assets import Assets
+from .effects import Effects
 from .screen import draw
 from .state import GameState
 
@@ -59,6 +60,11 @@ def main():
     small_font = pygame.font.SysFont(None, config.SMALL_FONT_SIZE)
     toast_rect = pygame.Rect(config.TOAST_RECT)
     state = GameState()
+    effects = Effects()
+    # Clicks pop their damage number where the mouse is; automatic hits pop over the toast
+    state.on_hit = lambda amount, kind: effects.hit(
+        amount, kind, pygame.mouse.get_pos() if kind == 'click' else None)
+    state.on_defeat = effects.defeat
     mouse_button_down = False
     clock = pygame.time.Clock()
 
@@ -81,6 +87,7 @@ def main():
 
         now = pygame.time.get_ticks()
         state.update(now)
-        draw(screen, font, small_font, assets, state, now, pygame.mouse.get_pos())
+        effects.update()
+        draw(screen, font, small_font, assets, state, effects, now, pygame.mouse.get_pos())
         pygame.display.update()
         clock.tick(config.FPS)

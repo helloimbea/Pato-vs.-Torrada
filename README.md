@@ -87,6 +87,7 @@ Pato-vs.-Torrada/
 │   ├── state.py            # Game state and rules (damage, DPS, bosses, levels)
 │   ├── screen.py           # Everything drawn on screen (including the shop tooltips)
 │   ├── numbers.py          # Short numbers: 1500 -> 1.5 K
+│   ├── effects.py          # Animations: damage numbers, toast shake, flying coins
 │   ├── assets.py           # Loads images and sounds
 │   └── game.py             # Main loop and input handling
 ├── tests/                  # Automated tests (pytest)
@@ -111,6 +112,8 @@ Pato-vs.-Torrada/
 - Rebalance the levels (health, rewards, bosses) or add a new toast → `duck_vs_toast/levels.py`, then run the balance simulator (below) to see how long the game takes
 - Add a new duck → `duck_vs_toast/shop.py` (plus its images in `assets/images/ducks/`)
 - Move a button/text or change a color, timer or the FPS limit → `duck_vs_toast/config.py`
+- Make the animations faster, slower or stronger → the "Animations" section of `duck_vs_toast/config.py`
+- Give a toast a pained face when it gets hit → draw `<toast name>_hurt.png` (for example `nerd_toast_hurt.png`) in `assets/images/toasts/`, 1280×720 like the normal one; until then the toast just turns reddish
 - Change a duck's tooltip text → its `..._description` function in `duck_vs_toast/shop.py`
 - Replace the temporary icons (`sound_on`, `sound_off`, `next_level_on`, `next_level_off` in `assets/images/ui/`) → draw your own 1280×720 images with the same names, with the icon in the same spot
 

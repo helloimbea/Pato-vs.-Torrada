@@ -25,6 +25,7 @@ duck_vs_toast/
   state.py                 game state and rules (damage, DPS, bosses, levels, mute)
   screen.py                everything drawn on screen (incl. tooltips)
   numbers.py               short numbers: 1500 -> "1.5 K"
+  effects.py               animations: damage numbers, toast shake, flying coins
   assets.py                loads images and sounds
   game.py                  main loop, clicks and keys
 tools/simulate_balance.py  virtual player that measures the game's pace
@@ -58,6 +59,9 @@ and say how the pace changed (today: level 54 in about 55 minutes).
 - Only the left mouse button does anything; the quack plays only when hitting the toast or a button.
 - Sound and next-level icons are placeholders until the owner draws their own
   (same file names in `assets/images/ui/`, 1280×720).
+- The bread slice is painted on the map; `assets.split_bread` cuts it out at startup so it can
+  squash with the toast's face when hit. A pained face is an optional `<toast>_hurt.png` the owner
+  draws; until it exists, the toast turns reddish while hurt.
 - In-game text written by code (tooltips) is in English, because Phase 6 moves the drawn text to English too.
 
 ## Plan and progress
@@ -68,8 +72,8 @@ Each phase is one pull request into `main`; the owner reviews and merges it on G
 - [x] **Phase 1:** quick fixes (DEV_MODE, left click only, short numbers, DPS, muscular duck).
 - [x] **Phase 2:** tests, GitHub Actions, formula-based endless levels, balance simulator.
 - [x] **Phase 3:** mute (M key and button), next-level button, purchase counters, duck tooltips.
-- [ ] **Phase 4 (next):** damage numbers floating up, toast shaking when hit, coins flying when a toast is beaten.
-- [ ] **Phase 5:** save progress to JSON (autosave and on close), Duckcoins earned while closed
+- [x] **Phase 4:** damage numbers floating up, toast shaking and squashing (with a pained face) when hit, coins flying when a toast is beaten.
+- [ ] **Phase 5 (next):** save progress to JSON (autosave and on close), Duckcoins earned while closed
   (ask the owner about a limit, e.g. 8 h), start/pause (Esc)/victory screens, Bourgeois Duck
   (ask the owner about duration, cost and bonus).
 - [ ] **Phase 6:** crop the full-screen images (by script); drawn text in English (owner redraws, or use a font).

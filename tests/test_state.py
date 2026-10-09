@@ -66,7 +66,7 @@ def test_dps_hits_once_per_second_even_at_30_fps():
     shop.buy(state, SIAMESE)
     state.level_advance = False
     hits = []
-    state.deal_damage = hits.append
+    state.deal_damage = lambda amount, _kind='click': hits.append(amount)
     while clock.now < 60000:
         clock.now += 1000 / 30
         state.update(int(clock.now))
@@ -80,7 +80,7 @@ def test_muscular_duck_uses_the_current_click_damage():
     shop.buy(state, DOUBLE)
     shop.buy(state, DOUBLE)
     hits = []
-    state.deal_damage = hits.append
+    state.deal_damage = lambda amount, _kind='click': hits.append(amount)
     clock.now = 5000
     state.update(clock.now)
     assert hits == [4 * config.STARTING_DAMAGE]
