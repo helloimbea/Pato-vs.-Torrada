@@ -45,6 +45,7 @@ class GameState:
         # Called when a toast is hit / beaten, so the screen can animate it (see effects.py)
         self.on_hit = lambda _amount, _kind: None
         self.on_defeat = lambda: None
+        self.on_buy = lambda _name, _first_time: None
 
         self.load_level()
 

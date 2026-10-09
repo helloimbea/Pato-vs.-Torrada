@@ -2,6 +2,8 @@
 
 - damage numbers that float up and fade out after each hit;
 - the toast shaking, squishing and making a pained face when it gets hit;
+- a beaten toast quickly shrinking away, while the next one pops up;
+- a duck stretching and squashing when it is bought;
 - coins flying to the Duckcoins counter when a toast is beaten.
 
 The game state tells this module what happened (GameState.on_hit and
@@ -41,6 +43,9 @@ class Effects:
         self.coins = []
         self.shake_start = -config.SHAKE_DURATION
         self.squish_start = -config.HURT_DURATION
+        self.dead_toast = None  # the toast that was just beaten, while it shrinks away
+        self.death_start = None  # when the last toast was beaten (None: not yet)
+        self.duck_pops = {}  # duck name -> (when it was bought, whether it just appeared)
 
     # --- Things that happened in the game ---
 
@@ -61,9 +66,15 @@ class Effects:
             self.shake_start = now
         self.squish_start = now  # every hit makes it flinch (DPS only once per second)
 
-    def defeat(self):
-        """A toast was beaten: send coins flying to the Duckcoins counter."""
+    def defeat(self, toast=None):
+        """A toast was beaten: it shrinks away, and coins fly to the Duckcoins counter.
+
+        toast is the name of the beaten toast (state.toast before the next one comes).
+        """
         now = self.clock()
+        self.dead_toast = toast
+        self.death_start = now
+        self.squish_start = -config.HURT_DURATION  # the next toast arrives looking fine
         center = pygame.Rect(config.TOAST_RECT).center
         for i in range(config.COINS_PER_DEFEAT):
             angle = self.random.uniform(0, 2 * math.pi)
@@ -92,6 +103,48 @@ class Effects:
         """True right after a hit, while the toast shows its pained face."""
         return self.clock() - self.squish_start < config.HURT_DURATION
 
+    def duck_bought(self, name, first_time):
+        """A duck was bought: it stretches and squashes (and grows in, if it is new)."""
+        self.duck_pops[name] = (self.clock(), first_time)
+
+    def duck_scale(self, name):
+        """How much to stretch a duck this frame: (width, height), (1, 1) when it's still."""
+        start, first_time = self.duck_pops.get(name, (None, False))
+        if start is None:
+            return 1, 1
+        elapsed = self.clock() - start
+        if elapsed >= config.DUCK_POP_DURATION:
+            return 1, 1
+        t = elapsed / config.DUCK_POP_DURATION
+        # A wobble that fades out: taller, then shorter and wider, then a little taller again
+        wobble = math.sin(3 * math.pi * t) * (1 - t) * config.DUCK_POP_STRETCH
+        width, height = 1 - wobble * 0.6, 1 + wobble
+        if first_time:
+            grow = ease_out_back(elapsed / config.DUCK_GROW_TIME)
+            width, height = width * grow, height * grow
+        return width, height
+
+    def death(self):
+        """How far the beaten toast has shrunk: 0 -> 1, or None when nothing is dying."""
+        if self.dead_toast is None or self.death_start is None:
+            return None
+        elapsed = self.clock() - self.death_start
+        if elapsed >= config.DEATH_DURATION:
+            return None
+        return elapsed / config.DEATH_DURATION
+
+    def spawn(self):
+        """How much the new toast has popped up: 0 = not yet, 1 = full size.
+
+        It grows a little too big and settles back, like a spring.
+        """
+        if self.death_start is None:
+            return 1
+        elapsed = self.clock() - self.death_start - config.SPAWN_DELAY
+        if elapsed >= config.SPAWN_DURATION:
+            return 1
+        return ease_out_back(max(elapsed, 0) / config.SPAWN_DURATION)
+
     def coin_position(self, coin, now, target=config.DUCKCOINS_ICON_POS):
         """Where a coin is: first a quick burst out of the toast, then a flight to the counter.
 
@@ -114,6 +167,8 @@ class Effects:
                                if now - n.start < config.DAMAGE_NUMBER_DURATION]
         coin_time = config.COIN_BURST_TIME + config.COIN_FLIGHT_TIME
         self.coins = [c for c in self.coins if now - c.start < coin_time]
+        if self.death() is None:
+            self.dead_toast = None
 
     def draw(self, screen, font, coin_image, offset=(0, 0), coin_target=config.DUCKCOINS_ICON_POS):
         """offset: where the toast's part of the screen is (see layout.py);
@@ -156,3 +211,12 @@ def ease_in(t):
     """Slow at the start, fast at the end (0 -> 1)."""
     t = min(max(t, 0), 1)
     return t * t
+
+
+def ease_out_back(t):
+    """Fast at the start, goes a little past the end and comes back (0 -> 1)."""
+    if t <= 0:
+        return 0
+    t = min(t, 1)
+    overshoot = 1.7
+    return 1 + (overshoot + 1) * (t - 1) ** 3 + overshoot * (t - 1) ** 2

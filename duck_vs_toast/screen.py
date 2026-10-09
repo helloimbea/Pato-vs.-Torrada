@@ -2,6 +2,7 @@
 import pygame
 
 from . import config
+from .effects import ease_in
 from .numbers import format_number
 from .shop import DUCKS
 
@@ -52,45 +53,97 @@ def draw_tooltip(screen, small_font, state, mouse_pos, offset=(0, 0)):
         y += text.get_height()
 
 
+def toast_drawing(assets, name, mood=None):
+    """The toast's drawing for a mood ('hurt' or 'dead'), and whether it still needs a tint.
+
+    A mood is the image "<toast>_<mood>.png" (for example nerd_toast_hurt.png) when it exists
+    in assets/images/toasts; until it is drawn, the normal toast is used with a tint.
+    """
+    if mood is not None and name + '_' + mood in assets.toasts:
+        return assets.toasts[name + '_' + mood], False
+    return assets.toasts.get(name), mood is not None
+
+
+def toast_body(assets, toast):
+    """The bread slice with the toast's face on it (everything below the title): (image, rect)."""
+    body = assets.bread.rect
+    face = None
+    if toast is not None:
+        face = toast.rect.clip(
+            pygame.Rect(0, config.TOAST_TITLE_BOTTOM, config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
+        if face.width and face.height:
+            body = body.union(face)
+        else:
+            face = None
+    image = pygame.Surface(body.size, pygame.SRCALPHA)
+    image.blit(assets.bread.image, (assets.bread.pos[0] - body.x, assets.bread.pos[1] - body.y))
+    if face is not None:
+        image.blit(toast.image, (face.x - body.x, face.y - body.y), face.move(-toast.pos[0], -toast.pos[1]))
+    return image, body
+
+
+def draw_dead_toast(screen, assets, name, progress):
+    """The beaten toast shrinks very fast until it disappears.
+
+    Its face is "<toast>_dead.png" when it exists; until it is drawn, the toast turns gray.
+    """
+    toast, tint = toast_drawing(assets, name, 'dead')
+    image, body = toast_body(assets, toast)
+    size = 1 - ease_in(progress)
+    width, height = round(body.width * size), round(body.height * size)
+    if width <= 0 or height <= 0:
+        return
+    image = pygame.transform.smoothscale(image, (width, height))
+    if tint:
+        image.fill(config.DEATH_TINT + (255,), special_flags=pygame.BLEND_RGBA_MULT)
+    screen.blit(image, image.get_rect(center=body.center))
+
+
 def draw_toast(screen, assets, state, effects):
     """The bread slice and the toast's face, flinching when hit: they shake, squash and look hurt.
 
-    The pained face is the image "<toast>_hurt.png" (for example nerd_toast_hurt.png) when it
-    exists in assets/images/toasts; until it is drawn, the toast turns reddish instead.
+    A beaten toast shrinks away while the next one pops up (see effects.py).
     """
-    hurt = effects.is_hurt()
-    toast = assets.toasts.get(state.toast + '_hurt') if hurt else None
-    tint = hurt and toast is None
-    if toast is None:
-        toast = assets.toasts.get(state.toast)
+    death = effects.death()
+    if death is not None:
+        draw_dead_toast(screen, assets, effects.dead_toast, death)
 
-    # The toast's name (top of its image, above TOAST_TITLE_BOTTOM) stays still;
-    # the bread and the face below it move together
-    body = assets.bread.rect
+    toast, tint = toast_drawing(assets, state.toast, 'hurt' if effects.is_hurt() else None)
     if toast is not None:
-        x, y = toast.pos
-        title_height = min(max(config.TOAST_TITLE_BOTTOM - y, 0), toast.image.get_height())
+        # The toast's name (top of its image, above TOAST_TITLE_BOTTOM) stays still
+        title_height = min(max(config.TOAST_TITLE_BOTTOM - toast.pos[1], 0), toast.image.get_height())
         screen.blit(toast.image, toast.pos, (0, 0, toast.image.get_width(), title_height))
-        face = toast.rect.clip(
-            pygame.Rect(0, config.TOAST_TITLE_BOTTOM, config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
-        body = body.union(face) if face.width and face.height else body
-    body_image = pygame.Surface(body.size, pygame.SRCALPHA)
-    body_image.blit(assets.bread.image, (assets.bread.pos[0] - body.x, assets.bread.pos[1] - body.y))
-    if toast is not None and face.width and face.height:
-        body_image.blit(toast.image, (face.x - body.x, face.y - body.y), face.move(-x, -y))
 
+    # The bread and the face move together
+    body_image, body = toast_body(assets, toast)
     squish = effects.squish()
-    if squish:
-        size = (round(body.width * (1 + config.SQUISH_WIDTH * squish)),
-                round(body.height * (1 - config.SQUISH_HEIGHT * squish)))
-        body_image = pygame.transform.smoothscale(body_image, size)
+    spawn = effects.spawn()
+    width = body.width * (1 + config.SQUISH_WIDTH * squish) * spawn
+    height = body.height * (1 - config.SQUISH_HEIGHT * squish) * spawn
+    if round(width) <= 0 or round(height) <= 0:  # the next toast hasn't popped up yet
+        assets.reward_badge.draw(screen)
+        return
+    if (round(width), round(height)) != body.size:
+        body_image = pygame.transform.smoothscale(body_image, (round(width), round(height)))
     if tint:
         body_image.fill(config.HURT_TINT + (255,), special_flags=pygame.BLEND_RGBA_MULT)
 
     dx, dy = effects.toast_offset()
-    # Squashing keeps the toast's feet on the ground (bottom center stays in place)
+    # Squashing and popping up keep the toast's feet on the ground (bottom center stays in place)
     screen.blit(body_image, body_image.get_rect(midbottom=(body.centerx + dx, body.bottom + dy)))
     assets.reward_badge.draw(screen)
+
+
+def draw_duck(screen, sprite, scale):
+    """A bought duck, stretched by scale = (width, height) with its feet in place."""
+    if scale == (1, 1):
+        sprite.draw(screen)
+        return
+    size = (round(sprite.image.get_width() * scale[0]), round(sprite.image.get_height() * scale[1]))
+    if size[0] <= 0 or size[1] <= 0:
+        return
+    image = pygame.transform.smoothscale(sprite.image, size)
+    screen.blit(image, image.get_rect(midbottom=sprite.rect.midbottom))
 
 
 def stretch(image, width, left, right):
@@ -150,7 +203,7 @@ def draw_center(screen, font, assets, state, effects, now):
 
     # Bought ducks, toast and starter duck
     for name in state.ducks_on_screen:
-        assets.ducks[name].draw(screen)
+        draw_duck(screen, assets.ducks[name], effects.duck_scale(name))
     draw_toast(screen, assets, state, effects)
     assets.ducks['starter_duck'].draw(screen)
 
