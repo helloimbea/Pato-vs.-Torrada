@@ -17,7 +17,7 @@ SAVED_FIELDS = [
     'duckcoins', 'level', 'level_advance', 'highest_level',
     'damage', 'dps', 'dps_base', 'has_auto_click', 'auto_click_interval',
     'costs', 'purchases', 'ducks_on_screen', 'bourgeois_purchases',
-    'muted', 'victory_seen',
+    'muted', 'victory_seen', 'language',
 ]
 
 
@@ -54,6 +54,7 @@ def from_dict(state, data, wall_time=None):
     recharge_left = data.get('bourgeois_recharge_left', 0) - away * 1000
     if recharge_left > 0:
         state.bourgeois_ready = clock_now + recharge_left
+    state.set_language(state.language)
     state.load_level()
     return away
 

@@ -1,4 +1,4 @@
-"""Draw the placeholder icons for the sound and next level buttons.
+"""Draw the placeholder icons for the sound, next level and language buttons.
 
 They are temporary: replace the PNG files in assets/images/ui with your own
 drawings whenever you like (same file names, drawn on a 1280x720 canvas with the
@@ -47,6 +47,17 @@ def sound_icon(muted):
     return surface
 
 
+def language_icon(label):
+    """A round button with the current language: "PT" or "EN"."""
+    surface = blank()
+    x, y = config.LANGUAGE_BUTTON_POS
+    pygame.draw.circle(surface, BUTTON_BLUE, (x, y), 20)
+    font = pygame.font.SysFont(None, 24, bold=True)
+    text = font.render(label, True, WHITE)
+    surface.blit(text, text.get_rect(center=(x, y + 1)))
+    return surface
+
+
 def main():
     pygame.init()
     icons = {
@@ -54,6 +65,8 @@ def main():
         'next_level_off': next_level_icon(90),
         'sound_on': sound_icon(muted=False),
         'sound_off': sound_icon(muted=True),
+        'language_en': language_icon('EN'),
+        'language_pt': language_icon('PT'),
     }
     for name, surface in icons.items():
         path = os.path.join(UI_DIR, name + '.png')

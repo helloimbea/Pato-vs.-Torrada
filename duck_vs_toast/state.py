@@ -1,7 +1,7 @@
 """Game state: everything that changes while playing (level, health, Duckcoins, ...)."""
 import pygame
 
-from . import config, levels
+from . import config, i18n, levels
 from .shop import DUCKS
 
 
@@ -46,6 +46,7 @@ class GameState:
 
         # Settings
         self.muted = False
+        self.language = i18n.language  # 'en' or 'pt' (see i18n.py)
         self.victory_seen = False  # the "you beat every toast" screen shows only once
 
         # Called when a toast is hit / beaten, so the screen can animate it (see effects.py)
@@ -90,6 +91,15 @@ class GameState:
 
     def toggle_mute(self):
         self.muted = not self.muted
+
+    def toggle_language(self):
+        """Switch between English and Portuguese."""
+        languages = i18n.LANGUAGES
+        self.set_language(languages[(languages.index(self.language) + 1) % len(languages)])
+
+    def set_language(self, language):
+        i18n.set_language(language)
+        self.language = i18n.language
 
     def has_won(self):
         """True once every toast has been beaten (after that they come back, stronger)."""
