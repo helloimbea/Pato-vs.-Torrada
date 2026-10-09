@@ -125,3 +125,13 @@ def test_mute_toggles():
     assert state.muted
     state.toggle_mute()
     assert not state.muted
+
+
+def test_victory_comes_after_beating_every_toast():
+    state, _ = new_game()
+    last_level = len(levels.TOASTS) * config.BOSS_EVERY_N_LEVELS - 1
+    state.level = state.highest_level = last_level
+    state.load_level()
+    assert not state.has_won()
+    state.deal_damage(state.health)
+    assert state.has_won()

@@ -55,13 +55,11 @@ If you fail, the boss's health resets. You can return to previous levels to farm
 - Doubles your total DPS.
 - Cost increases by **4×** after each purchase.
 
-### Bourgeois Duck *(Coming Soon)*
+### Bourgeois Duck
 
-Planned abilities:
-
-- Temporary damage boost
-- Temporary DPS boost
-- Temporary Duckcoin boost
+- Very expensive, with a fixed price: **10 M** Duckcoins.
+- For **1 minute**: all damage (clicks, DPS and the Muscular Duck) is doubled, and so are the Duckcoins from each toast. Boosted numbers turn gold.
+- After buying it, it recharges for **10 minutes** (the time left shows on its button).
 
 ---
 
@@ -87,6 +85,8 @@ Pato-vs.-Torrada/
 │   ├── state.py            # Game state and rules (damage, DPS, bosses, levels)
 │   ├── screen.py           # Everything drawn on screen (including the shop tooltips)
 │   ├── layout.py           # Resizable window: which corner each part sticks to
+│   ├── save.py             # Saving, loading and Duckcoins earned while closed
+│   ├── clock.py            # Game clock that stops while paused
 │   ├── numbers.py          # Short numbers: 1500 -> 1.5 K
 │   ├── effects.py          # Animations: damage numbers, toast shake, flying coins
 │   ├── assets.py           # Loads images and sounds
@@ -212,10 +212,19 @@ The tests also run automatically on GitHub (in the **Actions** tab) every time c
 | Action | Key |
 |---------|-----|
 | Attack | Left Mouse Button |
+| Pause / continue | Esc |
 | Mute / unmute the quack | M (or the speaker button, top right) |
 | Go back / forward a level | `<` and `>` buttons next to the level (forward only to levels already beaten) |
 | See what a duck does | Hover the mouse over it in the shop |
 | Cheat: +1 T Duckcoins (only with `DEV_MODE = True` in `duck_vs_toast/config.py`) | P |
+
+---
+
+## 💾 Saving
+
+The game saves by itself every 30 seconds and when it is closed, and continues from there
+next time. While it is closed, your ducks keep earning Duckcoins (for up to 8 hours).
+The save is the file `.duck_vs_toast/save.json` in your user folder; delete it to start over.
 
 ---
 

@@ -25,6 +25,8 @@ duck_vs_toast/
   state.py                 game state and rules (damage, DPS, bosses, levels, mute)
   screen.py                everything drawn on screen (incl. tooltips)
   layout.py                resizable window: offset of each screen part, mouse -> part coords
+  save.py                  save/load JSON (~/.duck_vs_toast/save.json), offline earnings
+  clock.py                 GameClock: game time that stops while paused
   numbers.py               short numbers: 1500 -> "1.5 K"
   effects.py               animations: damage numbers, toast shake, flying coins
   assets.py                loads images and sounds
@@ -74,6 +76,14 @@ and say how the pace changed (today: level 54 in about 55 minutes).
   `bottom` shop), and the canvas is scaled to fit. `assets.py` splits the map into background,
   stats boxes and shop panel; `screen.stretch` widens the background and shop without
   stretching the drawing. Clicks use `layout.to_group(part, mouse_pos)`.
+- Saving: autosave every 30 s and on close; old saves keep defaults for new fields. Offline
+  earnings: the ducks (DPS + muscular duck, no clicks) keep beating the current level's toast
+  (the one before it on a boss level) for up to 8 h; owner chose 8 h.
+- Bourgeois Duck (owner's design): fixed price 10 M, for 1 min doubles all damage and toast
+  Duckcoins, then 10 min recharge from purchase. Not in `shop.DUCKS`; see `shop.buy_bourgeois`.
+- Screens: start (with "welcome back" earnings), pause (Esc), victory once all toasts are beaten
+  (`state.has_won`, shown once). They are text drawn by code in `game.py`; the game clock is
+  paused behind them.
 - In-game text written by code (tooltips) is in English, because Phase 6 moves the drawn text to English too.
 
 ## Plan and progress
@@ -85,10 +95,9 @@ Each phase is one pull request into `main`; the owner reviews and merges it on G
 - [x] **Phase 2:** tests, GitHub Actions, formula-based endless levels, balance simulator.
 - [x] **Phase 3:** mute (M key and button), next-level button, purchase counters, duck tooltips.
 - [x] **Phase 4:** damage numbers floating up, toast shaking and squashing (with a pained face) when hit, coins flying when a toast is beaten; later: beaten toast shrinks away, bought ducks stretch.
-- [ ] **Phase 5 (next):** save progress to JSON (autosave and on close), Duckcoins earned while closed
-  (ask the owner about a limit, e.g. 8 h), start/pause (Esc)/victory screens, Bourgeois Duck
-  (ask the owner about duration, cost and bonus).
-- [ ] **Phase 6:** ~~crop the full-screen images~~ (done early, with Phase 4); drawn text in English (owner redraws, or use a font).
+- [x] **Phase 5:** save progress to JSON (autosave and on close), Duckcoins earned while closed
+  (up to 8 h), start/pause (Esc)/victory screens, Bourgeois Duck.
+- [ ] **Phase 6 (next):** ~~crop the full-screen images~~ (done early, with Phase 4); drawn text in English (owner redraws, or use a font).
 - [ ] **Phase 7:** browser version with `pygbag` for itch.io; Windows `.exe` with PyInstaller.
 
 When a phase is done, tick it here in the same pull request.

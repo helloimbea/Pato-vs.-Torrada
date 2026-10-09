@@ -85,7 +85,6 @@ DUCKS = [
          muscular_duck_effect, muscular_duck_description),
     Duck('realistic_duck', 200000, 4, (883, 603), (863, 675), 'Realistic Duck',
          realistic_duck_effect, realistic_duck_description),
-    # Bourgeois duck (coming soon) will use the button at config.BOURGEOIS_BUTTON_POS
 ]
 
 
@@ -101,3 +100,43 @@ def buy(state, duck):
     duck.effect(state)
     state.costs[duck.name] = math.floor(cost * duck.cost_multiplier)
     state.on_buy(duck.name, first_time)  # lets the duck stretch on screen (see effects.py)
+
+
+# --- Bourgeois Duck ---
+# Not in DUCKS: it has a fixed price and, instead of a lasting upgrade, gives a boost
+# for a while (see GameState.is_boosted) and then has to recharge.
+
+def can_buy_bourgeois(state):
+    return state.duckcoins >= config.BOURGEOIS_COST and state.bourgeois_recharge_left() == 0
+
+
+def buy_bourgeois(state):
+    """Boost all damage and Duckcoins for a while. Returns True if it was bought."""
+    if not can_buy_bourgeois(state):
+        return False
+    now = state.clock()
+    state.duckcoins -= config.BOURGEOIS_COST
+    state.boost_end = now + config.BOURGEOIS_DURATION
+    state.bourgeois_ready = now + config.BOURGEOIS_COOLDOWN
+    state.bourgeois_purchases += 1
+    return True
+
+
+def format_time(milliseconds):
+    """60000 -> "1:00"."""
+    seconds = math.ceil(milliseconds / 1000)
+    return f'{seconds // 60}:{seconds % 60:02d}'
+
+
+def bourgeois_description(state):
+    """Tooltip lines for the Bourgeois Duck."""
+    lines = [f'For {config.BOURGEOIS_DURATION / 60000:g} min: '
+             f'x{config.BOURGEOIS_DAMAGE_MULTIPLIER} damage and '
+             f'x{config.BOURGEOIS_REWARD_MULTIPLIER} Duckcoins.']
+    if state.is_boosted():
+        lines.append(f'Active! {format_time(state.boost_time_left())} left.')
+    if state.bourgeois_recharge_left():
+        lines.append(f'Recharging: ready in {format_time(state.bourgeois_recharge_left())}.')
+    else:
+        lines.append(f'Recharges for {config.BOURGEOIS_COOLDOWN // 60000} min after buying.')
+    return lines

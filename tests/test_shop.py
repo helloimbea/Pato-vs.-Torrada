@@ -95,3 +95,51 @@ def test_buying_tells_the_screen_so_the_duck_can_stretch():
     shop.buy(state, SIAMESE)
     shop.buy(state, SIAMESE)
     assert bought == [('siamese_duck', True), ('siamese_duck', False)]
+
+
+def test_bourgeois_duck_boosts_damage_and_duckcoins_for_a_minute():
+    state, clock = new_game(duckcoins=config.BOURGEOIS_COST)
+    state.dps = 10
+    assert shop.buy_bourgeois(state)
+    assert state.duckcoins == 0
+    assert state.click_damage() == state.damage * config.BOURGEOIS_DAMAGE_MULTIPLIER
+    assert state.current_dps() == 10 * config.BOURGEOIS_DAMAGE_MULTIPLIER
+    assert state.current_reward() == state.reward * config.BOURGEOIS_REWARD_MULTIPLIER
+    clock.now += config.BOURGEOIS_DURATION
+    assert not state.is_boosted()
+    assert state.click_damage() == state.damage and state.current_reward() == state.reward
+
+
+def test_beating_a_toast_while_boosted_pays_double():
+    state, _ = new_game(duckcoins=config.BOURGEOIS_COST)
+    shop.buy_bourgeois(state)
+    reward = state.reward
+    state.deal_damage(state.health)
+    assert state.duckcoins == reward * config.BOURGEOIS_REWARD_MULTIPLIER
+
+
+def test_bourgeois_duck_has_a_fixed_price_and_recharges():
+    state, clock = new_game(duckcoins=3 * config.BOURGEOIS_COST)
+    assert shop.buy_bourgeois(state)
+    assert not shop.buy_bourgeois(state)  # recharging
+    clock.now += config.BOURGEOIS_COOLDOWN - 1
+    assert not shop.can_buy_bourgeois(state)
+    clock.now += 1
+    assert shop.buy_bourgeois(state)
+    assert state.duckcoins == config.BOURGEOIS_COST  # same price both times
+
+
+def test_bourgeois_duck_needs_enough_duckcoins():
+    state, _ = new_game(duckcoins=config.BOURGEOIS_COST - 1)
+    assert not shop.buy_bourgeois(state)
+    assert not state.is_boosted()
+
+
+def test_bourgeois_tooltip_says_what_it_does_and_when_it_is_ready():
+    state, clock = new_game(duckcoins=config.BOURGEOIS_COST)
+    shop.buy_bourgeois(state)
+    clock.now += 15_000
+    lines = shop.bourgeois_description(state)
+    assert 'x2 damage' in lines[0]
+    assert lines[1] == 'Active! 0:45 left.'
+    assert lines[2] == 'Recharging: ready in 9:45.'
