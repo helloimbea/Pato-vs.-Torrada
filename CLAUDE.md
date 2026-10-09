@@ -67,7 +67,7 @@ and say how the pace changed (today: level 54 in about 55 minutes).
 - The bread slice is painted on the old map; until the owner draws `toasts/bread.png` (and a map
   without the bread), `assets.split_bread` cuts it out at startup so it can squash with the face. A pained face is an optional `<toast>_hurt.png` the owner
   draws; until it exists, the toast turns reddish while hurt. Likewise `<toast>_dead.png` is the face of a
-  beaten toast as it falls over (gray tint until drawn); the next toast pops up meanwhile.
+  beaten toast as it shrinks away (gray tint until drawn); the next toast pops up meanwhile.
 - A bought duck stretches and squashes (and a new one grows in), via `GameState.on_buy`.
 - The window is resizable. Art and positions stay in 1280×720 coordinates; `layout.py` pins four
   parts to the window (`top_left` stats, `top_right` level/sound buttons, `center` toast and ducks,
@@ -84,7 +84,7 @@ Each phase is one pull request into `main`; the owner reviews and merges it on G
 - [x] **Phase 1:** quick fixes (DEV_MODE, left click only, short numbers, DPS, muscular duck).
 - [x] **Phase 2:** tests, GitHub Actions, formula-based endless levels, balance simulator.
 - [x] **Phase 3:** mute (M key and button), next-level button, purchase counters, duck tooltips.
-- [x] **Phase 4:** damage numbers floating up, toast shaking and squashing (with a pained face) when hit, coins flying when a toast is beaten; later: beaten toast falls over, bought ducks stretch.
+- [x] **Phase 4:** damage numbers floating up, toast shaking and squashing (with a pained face) when hit, coins flying when a toast is beaten; later: beaten toast shrinks away, bought ducks stretch.
 - [ ] **Phase 5 (next):** save progress to JSON (autosave and on close), Duckcoins earned while closed
   (ask the owner about a limit, e.g. 8 h), start/pause (Esc)/victory screens, Bourgeois Duck
   (ask the owner about duration, cost and bonus).

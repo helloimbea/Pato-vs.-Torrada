@@ -96,7 +96,7 @@ def test_toast_flinches_and_looks_hurt_after_any_hit(effects):
     assert not fx.is_hurt()
 
 
-def test_beaten_toast_falls_over_while_the_next_one_pops_up(effects):
+def test_beaten_toast_shrinks_away_while_the_next_one_pops_up(effects):
     fx, clock = effects
     assert fx.death() is None and fx.spawn() == 1
     fx.defeat('nerd_toast')

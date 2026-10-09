@@ -82,36 +82,27 @@ def toast_body(assets, toast):
     return image, body
 
 
-def rotate_around(image, rect, angle, pivot):
-    """Rotate an image placed at rect by angle (degrees, counterclockwise) around a point."""
-    rotated = pygame.transform.rotozoom(image, angle, 1)
-    from_pivot = pygame.math.Vector2(rect.center) - pivot
-    center = pygame.math.Vector2(pivot) + from_pivot.rotate(-angle)
-    return rotated, rotated.get_rect(center=(round(center.x), round(center.y)))
-
-
 def draw_dead_toast(screen, assets, name, progress):
-    """The beaten toast falls over to the right, then fades away.
+    """The beaten toast shrinks very fast until it disappears.
 
     Its face is "<toast>_dead.png" when it exists; until it is drawn, the toast turns gray.
     """
     toast, tint = toast_drawing(assets, name, 'dead')
     image, body = toast_body(assets, toast)
+    size = 1 - ease_in(progress)
+    width, height = round(body.width * size), round(body.height * size)
+    if width <= 0 or height <= 0:
+        return
+    image = pygame.transform.smoothscale(image, (width, height))
     if tint:
         image.fill(config.DEATH_TINT + (255,), special_flags=pygame.BLEND_RGBA_MULT)
-    elapsed = progress * config.DEATH_DURATION
-    fall = ease_in(elapsed / config.DEATH_FALL_TIME)
-    image, rect = rotate_around(image, body, -90 * fall, body.bottomright)
-    if elapsed > config.DEATH_FALL_TIME:
-        fade = (elapsed - config.DEATH_FALL_TIME) / (config.DEATH_DURATION - config.DEATH_FALL_TIME)
-        image.set_alpha(round(255 * (1 - fade)))
-    screen.blit(image, rect)
+    screen.blit(image, image.get_rect(center=body.center))
 
 
 def draw_toast(screen, assets, state, effects):
     """The bread slice and the toast's face, flinching when hit: they shake, squash and look hurt.
 
-    A beaten toast falls over while the next one pops up (see effects.py).
+    A beaten toast shrinks away while the next one pops up (see effects.py).
     """
     death = effects.death()
     if death is not None:

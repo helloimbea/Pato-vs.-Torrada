@@ -2,7 +2,7 @@
 
 - damage numbers that float up and fade out after each hit;
 - the toast shaking, squishing and making a pained face when it gets hit;
-- a beaten toast falling over and fading away, while the next one pops up;
+- a beaten toast quickly shrinking away, while the next one pops up;
 - a duck stretching and squashing when it is bought;
 - coins flying to the Duckcoins counter when a toast is beaten.
 
@@ -43,8 +43,8 @@ class Effects:
         self.coins = []
         self.shake_start = -config.SHAKE_DURATION
         self.squish_start = -config.HURT_DURATION
-        self.dead_toast = None  # the toast that was just beaten, while it falls over
-        self.death_start = -config.DEATH_DURATION
+        self.dead_toast = None  # the toast that was just beaten, while it shrinks away
+        self.death_start = None  # when the last toast was beaten (None: not yet)
         self.duck_pops = {}  # duck name -> (when it was bought, whether it just appeared)
 
     # --- Things that happened in the game ---
@@ -67,7 +67,7 @@ class Effects:
         self.squish_start = now  # every hit makes it flinch (DPS only once per second)
 
     def defeat(self, toast=None):
-        """A toast was beaten: it falls over, and coins fly to the Duckcoins counter.
+        """A toast was beaten: it shrinks away, and coins fly to the Duckcoins counter.
 
         toast is the name of the beaten toast (state.toast before the next one comes).
         """
@@ -125,9 +125,11 @@ class Effects:
         return width, height
 
     def death(self):
-        """How far along the beaten toast's fall is: 0 -> 1, or None when nothing is dying."""
+        """How far the beaten toast has shrunk: 0 -> 1, or None when nothing is dying."""
+        if self.dead_toast is None or self.death_start is None:
+            return None
         elapsed = self.clock() - self.death_start
-        if self.dead_toast is None or elapsed >= config.DEATH_DURATION:
+        if elapsed >= config.DEATH_DURATION:
             return None
         return elapsed / config.DEATH_DURATION
 
@@ -136,6 +138,8 @@ class Effects:
 
         It grows a little too big and settles back, like a spring.
         """
+        if self.death_start is None:
+            return 1
         elapsed = self.clock() - self.death_start - config.SPAWN_DELAY
         if elapsed >= config.SPAWN_DURATION:
             return 1
