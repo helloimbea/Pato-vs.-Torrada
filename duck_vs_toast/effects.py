@@ -4,6 +4,7 @@
 - the toast shaking, squishing and making a pained face when it gets hit;
 - a beaten toast quickly shrinking away, while the next one pops up;
 - a duck stretching and squashing when it is bought;
+- the Duckcoins counter rolling up to the new amount when the flying coins arrive;
 - coins flying to the Duckcoins counter when a toast is beaten.
 
 The game state tells this module what happened (GameState.on_hit and
@@ -45,6 +46,9 @@ class Effects:
         self.squish_start = -config.HURT_DURATION
         self.dead_toast = None  # the toast that was just beaten, while it shrinks away
         self.death_start = None  # when the last toast was beaten (None: not yet)
+        self.shown_duckcoins = None  # the number on the Duckcoins counter (see update)
+        self.count_from = 0          # the counter waits until then, for the coins to arrive
+        self.last_update = self.clock()
         self.duck_pops = {}  # duck name -> (when it was bought, whether it just appeared)
 
     # --- Things that happened in the game ---
@@ -74,6 +78,8 @@ class Effects:
         now = self.clock()
         self.dead_toast = toast
         self.death_start = now
+        if now >= self.count_from:  # the counter starts rolling when the first coin arrives
+            self.count_from = now + config.COIN_BURST_TIME + config.COIN_FLIGHT_TIME
         self.squish_start = -config.HURT_DURATION  # the next toast arrives looking fine
         center = pygame.Rect(config.TOAST_RECT).center
         for i in range(config.COINS_PER_DEFEAT):
@@ -160,9 +166,24 @@ class Effects:
             start, end = coin.burst_pos, target
         return start[0] + (end[0] - start[0]) * t, start[1] + (end[1] - start[1]) * t
 
-    def update(self):
-        """Forget the animations that are over."""
+    def update(self, duckcoins=0):
+        """Forget the animations that are over, and roll the Duckcoins counter.
+
+        duckcoins is how many the player really has. The counter goes down at once
+        (spending feels instant) and rolls up, fast at first and then slower.
+        """
         now = self.clock()
+        elapsed, self.last_update = now - self.last_update, now
+        shown = self.shown_duckcoins
+        if shown is None or duckcoins <= shown:
+            self.shown_duckcoins = duckcoins
+        elif now >= self.count_from:
+            shown += (duckcoins - shown) * (1 - math.exp(-elapsed / config.COUNTER_SPEED))
+            # Close enough: show the exact amount (big numbers are shortened anyway)
+            if duckcoins - shown <= max(1, duckcoins * 0.001):
+                shown = duckcoins
+            self.shown_duckcoins = shown
+
         self.damage_numbers = [n for n in self.damage_numbers
                                if now - n.start < config.DAMAGE_NUMBER_DURATION]
         coin_time = config.COIN_BURST_TIME + config.COIN_FLIGHT_TIME

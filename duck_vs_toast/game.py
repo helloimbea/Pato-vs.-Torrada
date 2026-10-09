@@ -164,7 +164,7 @@ def main():
             layout = Layout(window.get_size())
         now = game_clock()
         state.update(now)
-        effects.update()
+        effects.update(state.duckcoins)
         lines = overlay_lines(overlay, away or 0, earned) if overlay else None
         screen.draw(window, layout, state, effects, now, pygame.mouse.get_pos(), lines)
         pygame.display.update()

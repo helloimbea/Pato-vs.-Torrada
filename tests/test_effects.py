@@ -132,3 +132,30 @@ def test_new_duck_grows_in_from_nothing(effects):
     assert fx.duck_scale('realistic_duck') == (0, 0)
     clock.now += config.DUCK_GROW_TIME
     assert fx.duck_scale('realistic_duck')[1] > 0.9
+
+
+def test_duckcoins_counter_waits_for_the_coins_then_rolls_up(effects):
+    fx, clock = effects
+    fx.update(100)
+    assert fx.shown_duckcoins == 100
+    fx.defeat('happy_toast')
+    fx.update(1100)  # the reward arrived, but the coins are still flying
+    assert fx.shown_duckcoins == 100
+    clock.now += config.COIN_BURST_TIME + config.COIN_FLIGHT_TIME
+    fx.update(1100)
+    shown = []
+    for _ in range(10):
+        clock.now += 33
+        fx.update(1100)
+        shown.append(fx.shown_duckcoins)
+    assert 100 < shown[0] < shown[1] < 1100  # rolling up, a bit each frame
+    clock.now += 10 * config.COUNTER_SPEED
+    fx.update(1100)
+    assert fx.shown_duckcoins == 1100
+
+
+def test_duckcoins_counter_goes_down_at_once_when_spending(effects):
+    fx, _ = effects
+    fx.update(5000)
+    fx.update(200)
+    assert fx.shown_duckcoins == 200

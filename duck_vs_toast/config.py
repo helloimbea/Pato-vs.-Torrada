@@ -97,6 +97,7 @@ COIN_DELAY = 60                # coins leave the toast one after another
 COIN_BURST_TIME = 250          # coins pop out of the toast...
 COIN_FLIGHT_TIME = 550         # ...then fly to the Duckcoins counter
 COIN_SIZE = 34
+COUNTER_SPEED = 150            # the Duckcoins counter rolls up to new Duckcoins (smaller = faster)
 DUCKCOINS_ICON_POS = (82, 61)  # center of the coin drawn in the Duckcoins box (map image)
 DUCKCOINS_ICON_RADIUS = 28
 

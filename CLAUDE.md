@@ -72,6 +72,8 @@ and say how the pace changed (today: level 54 in about 55 minutes).
   draws; until it exists, the toast turns reddish while hurt. Likewise `<toast>_dead.png` is the face of a
   beaten toast as it shrinks away (gray tint until drawn); the next toast pops up meanwhile.
 - A bought duck stretches and squashes (and a new one grows in), via `GameState.on_buy`.
+- The Duckcoins counter shows `effects.shown_duckcoins`: it rolls up once the flying coins
+  arrive and drops at once when spending; `effects.update(state.duckcoins)` drives it.
 - The window is resizable. Art and positions stay in 1280×720 coordinates; `layout.py` pins four
   parts to the window (`top_left` stats, `top_right` level/sound buttons, `center` toast and ducks,
   `bottom` shop), and the canvas is scaled to fit. `assets.py` splits the map into background,
