@@ -30,8 +30,9 @@ duck_vs_toast/
   game.py                  main loop, clicks and keys
 tools/simulate_balance.py  virtual player that measures the game's pace
 tools/make_placeholder_icons.py  temporary sound / next-level icons
+tools/crop_images.py       crops full-screen drawings, saves positions
 tests/                     pytest tests
-assets/images/...          art; every image is 1280×720, mostly transparent, drawn at (0, 0)
+assets/images/...          art, cropped to the drawing; assets/images/positions.json says where each goes
 IDEAS.md                   the owner's notepad of future ideas (theirs to edit)
 ```
 
@@ -58,9 +59,12 @@ and say how the pace changed (today: level 54 in about 55 minutes).
 - `DEV_MODE = False` in `config.py`; turning it on enables the P cheat and prints click positions.
 - Only the left mouse button does anything; the quack plays only when hitting the toast or a button.
 - Sound and next-level icons are placeholders until the owner draws their own
-  (same file names in `assets/images/ui/`, 1280×720).
-- The bread slice is painted on the map; `assets.split_bread` cuts it out at startup so it can
-  squash with the toast's face when hit. A pained face is an optional `<toast>_hurt.png` the owner
+  (same file names in `assets/images/ui/`).
+- Images are cropped to the drawing, and `assets.py` loads each as a `Sprite` (image + position).
+  The owner draws on a 1280×720 canvas in the right spot and runs `python -m tools.crop_images`;
+  the game also accepts an uncropped full-screen image. Maps (backgrounds) stay full-screen.
+- The bread slice is painted on the old map; until the owner draws `toasts/bread.png` (and a map
+  without the bread), `assets.split_bread` cuts it out at startup so it can squash with the face. A pained face is an optional `<toast>_hurt.png` the owner
   draws; until it exists, the toast turns reddish while hurt.
 - In-game text written by code (tooltips) is in English, because Phase 6 moves the drawn text to English too.
 
@@ -76,7 +80,7 @@ Each phase is one pull request into `main`; the owner reviews and merges it on G
 - [ ] **Phase 5 (next):** save progress to JSON (autosave and on close), Duckcoins earned while closed
   (ask the owner about a limit, e.g. 8 h), start/pause (Esc)/victory screens, Bourgeois Duck
   (ask the owner about duration, cost and bonus).
-- [ ] **Phase 6:** crop the full-screen images (by script); drawn text in English (owner redraws, or use a font).
+- [ ] **Phase 6:** ~~crop the full-screen images~~ (done early, with Phase 4); drawn text in English (owner redraws, or use a font).
 - [ ] **Phase 7:** browser version with `pygbag` for itch.io; Windows `.exe` with PyInstaller.
 
 When a phase is done, tick it here in the same pull request.

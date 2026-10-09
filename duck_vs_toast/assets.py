@@ -1,5 +1,15 @@
-"""Loading images and sounds."""
+"""Loading images and sounds.
+
+Images can be drawn two ways:
+- on a full 1280x720 canvas, in the spot where they go on screen (the old way); or
+- cropped to just the drawing, with its position in assets/images/positions.json.
+
+`python -m tools.crop_images` turns the first kind into the second. In the game both look
+the same: every image becomes a Sprite (the drawing plus where it goes).
+"""
+import json
 import os
+from dataclasses import dataclass
 
 import pygame
 
@@ -11,19 +21,53 @@ def load_image(category, name):
     return pygame.image.load(path).convert_alpha()
 
 
-def load_folder(category):
-    """Load every .png image in a folder.
+def load_positions():
+    try:
+        with open(config.POSITIONS_FILE) as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return {}
 
-    Returns a dict {file_name_without_extension: image}.
+
+@dataclass
+class Sprite:
+    image: pygame.Surface
+    pos: tuple  # where its top-left corner goes on screen
+
+    @property
+    def rect(self):
+        return self.image.get_rect(topleft=self.pos)
+
+    def draw(self, screen):
+        screen.blit(self.image, self.pos)
+
+
+def make_sprite(image, key, positions):
+    """Turn a loaded image into a Sprite. Full-screen drawings are cropped to the drawing itself."""
+    if image.get_size() == (config.SCREEN_WIDTH, config.SCREEN_HEIGHT):
+        area = image.get_bounding_rect()
+        return Sprite(image.subsurface(area).copy(), area.topleft)
+    if key not in positions:
+        raise ValueError(
+            f'{key}.png is smaller than the screen, so the game needs to know where it goes. '
+            f'Draw it on a 1280x720 canvas, or add "{key}": [x, y] to assets/images/positions.json.')
+    return Sprite(image, tuple(positions[key]))
+
+
+def load_folder(category, positions):
+    """Load every .png image in a folder as Sprites.
+
+    Returns a dict {file_name_without_extension: sprite}.
     To add a new image, just drop the file in the right folder.
     """
     folder = os.path.join(config.IMAGES_DIR, category)
-    images = {}
+    sprites = {}
     for file_name in sorted(os.listdir(folder)):
         name, extension = os.path.splitext(file_name)
         if extension.lower() == '.png':
-            images[name] = load_image(category, file_name)
-    return images
+            image = load_image(category, file_name)
+            sprites[name] = make_sprite(image, f'{category}/{name}', positions)
+    return sprites
 
 
 def cut_coin(game_map):
@@ -46,8 +90,9 @@ def is_bread(color):
 def split_bread(game_map):
     """Take the bread slice out of the map, so it can squash when a toast is hit.
 
-    The bread is painted on the map and each toast image only adds its face on top.
-    Returns (map without the bread, bread on a transparent 1280x720 image).
+    Only used while there is no separate bread drawing (assets/images/toasts/bread.png):
+    the old map has the bread painted on it, and each toast image only adds its face on top.
+    Returns (map without the bread, bread Sprite).
     """
     width, height = game_map.get_size()
     start = pygame.Rect(config.TOAST_RECT).center
@@ -82,7 +127,7 @@ def split_bread(game_map):
             bread_image.set_at((x, y), color)
             t = (x - left_x) / (right_x - left_x)
             background.set_at((x, y), left.lerp(right, t))
-    return background, bread_image
+    return background, make_sprite(bread_image, 'bread', {})
 
 
 def cut_reward_badge(game_map):
@@ -95,7 +140,7 @@ def cut_reward_badge(game_map):
             # Not the blue background and not the bread: the plus sign or the coin
             if (color.r > color.b or color.g > color.b + 20) and not is_bread(color):
                 badge.set_at((x, y), color)
-    return badge
+    return make_sprite(badge, 'reward_badge', {})
 
 
 class Assets:
@@ -107,11 +152,16 @@ class Assets:
     def __init__(self):
         game_map = load_image('maps', 'map1.png')
         game_map = pygame.transform.scale(game_map, (config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
-        self.map, self.bread = split_bread(game_map)
+        positions = load_positions()
+        self.ducks = load_folder('ducks', positions)
+        self.toasts = load_folder('toasts', positions)
+        self.ui = load_folder('ui', positions)
+        if 'bread' in self.toasts:  # the bread drawn on its own, with the map drawn without it
+            self.bread = self.toasts.pop('bread')
+            self.map = game_map
+        else:
+            self.map, self.bread = split_bread(game_map)
         self.reward_badge = cut_reward_badge(game_map)
-        self.ducks = load_folder('ducks')
-        self.toasts = load_folder('toasts')
-        self.ui = load_folder('ui')
         self.coin = cut_coin(game_map)
         self.click_sound = None  # stays None when there is no audio device (e.g. Codespaces)
         if pygame.mixer.get_init():

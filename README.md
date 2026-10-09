@@ -93,7 +93,8 @@ Pato-vs.-Torrada/
 ├── tests/                  # Automated tests (pytest)
 ├── tools/
 │   ├── simulate_balance.py # Virtual player that measures the game's pace
-│   └── make_placeholder_icons.py # Draws the temporary sound and next-level icons
+│   ├── make_placeholder_icons.py # Draws the temporary sound and next-level icons
+│   └── crop_images.py      # Crops full-screen drawings and saves where they go
 ├── assets/
 │   ├── images/
 │   │   ├── ducks/          # Ducks and locked-duck cards
@@ -113,9 +114,11 @@ Pato-vs.-Torrada/
 - Add a new duck → `duck_vs_toast/shop.py` (plus its images in `assets/images/ducks/`)
 - Move a button/text or change a color, timer or the FPS limit → `duck_vs_toast/config.py`
 - Make the animations faster, slower or stronger → the "Animations" section of `duck_vs_toast/config.py`
-- Give a toast a pained face when it gets hit → draw `<toast name>_hurt.png` (for example `nerd_toast_hurt.png`) in `assets/images/toasts/`, 1280×720 like the normal one; until then the toast just turns reddish
+- Add or redraw an image → draw it on a 1280×720 canvas, in the spot where it goes on screen, save it in the right folder and run `python -m tools.crop_images`. It cuts the image down to the drawing and saves its position in `assets/images/positions.json`. (The game also accepts a full-screen image before cropping.)
+- Draw the bread on its own → save just the bread slice as `assets/images/toasts/bread.png` and the map without it as `assets/images/maps/map1.png`. Until then, the game cuts the bread out of the map by itself when it starts.
+- Give a toast a pained face when it gets hit → draw `<toast name>_hurt.png` (for example `nerd_toast_hurt.png`) in `assets/images/toasts/`, in the same spot as the normal one; until then the toast just turns reddish
 - Change a duck's tooltip text → its `..._description` function in `duck_vs_toast/shop.py`
-- Replace the temporary icons (`sound_on`, `sound_off`, `next_level_on`, `next_level_off` in `assets/images/ui/`) → draw your own 1280×720 images with the same names, with the icon in the same spot
+- Replace the temporary icons (`sound_on`, `sound_off`, `next_level_on`, `next_level_off` in `assets/images/ui/`) → draw your own with the same names, with the icon in the same spot, then run `python -m tools.crop_images`
 
 ---
 
