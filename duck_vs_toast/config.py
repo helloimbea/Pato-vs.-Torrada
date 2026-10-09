@@ -13,10 +13,21 @@ POSITIONS_FILE = os.path.join(IMAGES_DIR, 'positions.json')  # where each croppe
 # --- Screen ---
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
+SCREEN_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)  # the size the art is drawn at
 TITLE = 'Duck vs. Toast'
 FONT_SIZE = 48
 SMALL_FONT_SIZE = 28  # purchase counters and tooltips
 FPS = 30  # frame rate limit
+
+# --- Resizable window (see layout.py) ---
+# The map is split in parts that follow the window's edges:
+SHOP_TOP = 472                     # the shop panel starts at this line, stuck to the bottom
+# The Duckcoins, DPS and damage boxes (x, y, width, height), stuck to the top left
+STATS_BOXES = [(26, 6, 316, 112), (26, 116, 240, 88), (26, 206, 140, 86)]
+# When the window is wider, the background and shop keep their left and right ends at the
+# window's edges and stretch the plain part between these x positions
+BACKGROUND_STRETCH = (260, 1080)
+SHOP_STRETCH = (40, 1240)
 
 # --- Colors ---
 RED = (234, 95, 112)

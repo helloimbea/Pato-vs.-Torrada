@@ -24,6 +24,7 @@ duck_vs_toast/
   shop.py                  ducks: cost, effect and tooltip text
   state.py                 game state and rules (damage, DPS, bosses, levels, mute)
   screen.py                everything drawn on screen (incl. tooltips)
+  layout.py                resizable window: offset of each screen part, mouse -> part coords
   numbers.py               short numbers: 1500 -> "1.5 K"
   effects.py               animations: damage numbers, toast shake, flying coins
   assets.py                loads images and sounds
@@ -66,6 +67,11 @@ and say how the pace changed (today: level 54 in about 55 minutes).
 - The bread slice is painted on the old map; until the owner draws `toasts/bread.png` (and a map
   without the bread), `assets.split_bread` cuts it out at startup so it can squash with the face. A pained face is an optional `<toast>_hurt.png` the owner
   draws; until it exists, the toast turns reddish while hurt.
+- The window is resizable. Art and positions stay in 1280×720 coordinates; `layout.py` pins four
+  parts to the window (`top_left` stats, `top_right` level/sound buttons, `center` toast and ducks,
+  `bottom` shop), and the canvas is scaled to fit. `assets.py` splits the map into background,
+  stats boxes and shop panel; `screen.stretch` widens the background and shop without
+  stretching the drawing. Clicks use `layout.to_group(part, mouse_pos)`.
 - In-game text written by code (tooltips) is in English, because Phase 6 moves the drawn text to English too.
 
 ## Plan and progress

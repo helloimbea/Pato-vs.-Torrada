@@ -140,7 +140,78 @@ def cut_reward_badge(game_map):
             # Not the blue background and not the bread: the plus sign or the coin
             if (color.r > color.b or color.g > color.b + 20) and not is_bread(color):
                 badge.set_at((x, y), color)
+    # The coin's face has bread-like colors; take whatever is enclosed by the coin's rim too
+    outside = pygame.mask.from_surface(badge.subsurface(area))
+    outside.invert()
+    for hole in outside.connected_components():
+        box = hole.get_bounding_rects()[0]
+        if box.left > 0 and box.top > 0 and box.right < area.width and box.bottom < area.height:
+            for x in range(box.left, box.right):
+                for y in range(box.top, box.bottom):
+                    if hole.get_at((x, y)):
+                        position = (area.left + x, area.top + y)
+                        badge.set_at(position, game_map.get_at(position))
     return make_sprite(badge, 'reward_badge', {})
+
+
+def cut_stats_panel(game_map):
+    """Take the Duckcoins, DPS and damage boxes out of the map, so they can stay in the corner.
+
+    Returns (map without the boxes, boxes Sprite). The hole is filled with the sky or floor
+    color of each row, taken just right of the boxes.
+    """
+    area = pygame.Rect(config.STATS_BOXES[0]).unionall(config.STATS_BOXES)
+    reference_x = area.right + 15
+    panel = pygame.Surface(area.size, pygame.SRCALPHA)
+    without_boxes = game_map.copy()
+    for box in config.STATS_BOXES:
+        box = pygame.Rect(box)
+        inside = pygame.mask.Mask(box.size)  # what differs from the sky or floor around it
+        for y in range(box.top, box.bottom):
+            background = game_map.get_at((reference_x, y))
+            for x in range(box.left, box.right):
+                color = game_map.get_at((x, y))
+                if abs(color.r - background.r) + abs(color.g - background.g) \
+                        + abs(color.b - background.b) > 24:
+                    inside.set_at((x - box.left, y - box.top))
+        grown = pygame.mask.Mask(box.size)  # a little bigger, to catch the soft edges
+        for dx in range(-2, 3):
+            for dy in range(-2, 3):
+                grown.draw(inside, (dx, dy))
+        for y in range(box.top, box.bottom):
+            background = game_map.get_at((reference_x, y))
+            for x in range(box.left, box.right):
+                if grown.get_at((x - box.left, y - box.top)):
+                    panel.set_at((x - area.left, y - area.top), game_map.get_at((x, y)))
+                    without_boxes.set_at((x, y), background)
+    return without_boxes, Sprite(panel, area.topleft)
+
+
+def split_map(game_map, reward_badge):
+    """Split the map in the background (sky and floor) and the shop panel at the bottom.
+
+    The "+ coin" under the toast is taken out of the shop, because it goes with the toast
+    (reward_badge draws it). Returns (background, shop Sprite, floor row): the floor row is
+    the background's last line without the "+ coin", repeated down when the window is taller.
+    """
+    width, height = game_map.get_size()
+    shop = game_map.subsurface((0, config.SHOP_TOP, width, height - config.SHOP_TOP)).copy()
+    badge = reward_badge.rect.inflate(4, 4)
+    shape = pygame.mask.Mask(badge.size)  # a little bigger than the badge, for its soft edges
+    for dx in range(5):
+        for dy in range(5):
+            shape.draw(pygame.mask.from_surface(reward_badge.image), (dx, dy))
+    for y in range(config.SHOP_TOP, badge.bottom):
+        fill = game_map.get_at((badge.left - 10, y))
+        for x in range(badge.left, badge.right):
+            if shape.get_at((x - badge.left, y - badge.top)):
+                shop.set_at((x, y - config.SHOP_TOP), fill)
+
+    background = game_map.subsurface((0, 0, width, config.SHOP_TOP)).copy()
+    floor_row = background.subsurface((0, config.SHOP_TOP - 1, width, 1)).copy()
+    floor_row.fill(game_map.get_at((badge.left - 10, config.SHOP_TOP - 1)),
+                   (badge.left - 5, 0, badge.width + 10, 1))
+    return background, Sprite(shop, (0, config.SHOP_TOP)), floor_row
 
 
 class Assets:
@@ -163,6 +234,9 @@ class Assets:
             self.map, self.bread = split_bread(game_map)
         self.reward_badge = cut_reward_badge(game_map)
         self.coin = cut_coin(game_map)
+        # So each part can follow its edge of the window (see layout.py)
+        self.map, self.stats_panel = cut_stats_panel(self.map)
+        self.background, self.shop, self.floor_row = split_map(self.map, self.reward_badge)
         self.click_sound = None  # stays None when there is no audio device (e.g. Codespaces)
         if pygame.mixer.get_init():
             self.click_sound = pygame.mixer.Sound(os.path.join(config.SOUNDS_DIR, 'quack.wav'))

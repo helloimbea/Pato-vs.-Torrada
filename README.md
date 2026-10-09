@@ -86,6 +86,7 @@ Pato-vs.-Torrada/
 │   ├── shop.py             # Duck shop: costs and what each duck does
 │   ├── state.py            # Game state and rules (damage, DPS, bosses, levels)
 │   ├── screen.py           # Everything drawn on screen (including the shop tooltips)
+│   ├── layout.py           # Resizable window: which corner each part sticks to
 │   ├── numbers.py          # Short numbers: 1500 -> 1.5 K
 │   ├── effects.py          # Animations: damage numbers, toast shake, flying coins
 │   ├── assets.py           # Loads images and sounds
@@ -117,6 +118,7 @@ Pato-vs.-Torrada/
 - Add or redraw an image → draw it on a 1280×720 canvas, in the spot where it goes on screen, save it in the right folder and run `python -m tools.crop_images`. It cuts the image down to the drawing and saves its position in `assets/images/positions.json`. (The game also accepts a full-screen image before cropping.)
 - Draw the bread on its own → save just the bread slice as `assets/images/toasts/bread.png` and the map without it as `assets/images/maps/map1.png`. Until then, the game cuts the bread out of the map by itself when it starts.
 - Give a toast a pained face when it gets hit → draw `<toast name>_hurt.png` (for example `nerd_toast_hurt.png`) in `assets/images/toasts/`, in the same spot as the normal one; until then the toast just turns reddish
+- The window can be resized (or maximized): the stats boxes stick to the top left, the level and sound buttons to the top right, the shop to the bottom, and the toast and ducks stay in the middle. Everything is still drawn on a 1280×720 canvas; which part goes where is in `duck_vs_toast/layout.py`, and the lines where the map is split are in the "Resizable window" section of `duck_vs_toast/config.py`
 - Change a duck's tooltip text → its `..._description` function in `duck_vs_toast/shop.py`
 - Replace the temporary icons (`sound_on`, `sound_off`, `next_level_on`, `next_level_off` in `assets/images/ui/`) → draw your own with the same names, with the icon in the same spot, then run `python -m tools.crop_images`
 

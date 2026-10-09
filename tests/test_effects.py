@@ -75,6 +75,8 @@ def test_coins_fly_to_the_duckcoins_counter(effects):
     assert fx.coin_position(coin, coin.start) == pytest.approx(pygame.Rect(config.TOAST_RECT).center)
     arrival = coin.start + config.COIN_BURST_TIME + config.COIN_FLIGHT_TIME
     assert fx.coin_position(coin, arrival) == pytest.approx(config.DUCKCOINS_ICON_POS)
+    # In a wider window the counter is further left of the toast, and the coins still reach it
+    assert fx.coin_position(coin, arrival, target=(-178, 61)) == pytest.approx((-178, 61))
     clock.now = fx.coins[-1].start + config.COIN_BURST_TIME + config.COIN_FLIGHT_TIME
     fx.update()
     assert fx.coins == []
