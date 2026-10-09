@@ -51,7 +51,7 @@ def draw_tooltip(screen, small_font, state, mouse_pos):
         y += text.get_height()
 
 
-def draw(screen, font, small_font, assets, state, now, mouse_pos):
+def draw(screen, font, small_font, assets, state, effects, now, mouse_pos):
     # The duck, toast and UI images are screen-sized,
     # so they are all drawn at position (0, 0).
     screen.blit(assets.map, (0, 0))
@@ -65,7 +65,7 @@ def draw(screen, font, small_font, assets, state, now, mouse_pos):
     for name in state.ducks_on_screen:
         screen.blit(assets.ducks[name], (0, 0))
     if state.toast in assets.toasts:
-        screen.blit(assets.toasts[state.toast], (0, 0))
+        screen.blit(assets.toasts[state.toast], effects.toast_offset())
     screen.blit(assets.ducks['starter_duck'], (0, 0))
 
     # Status texts
@@ -109,4 +109,5 @@ def draw(screen, font, small_font, assets, state, now, mouse_pos):
             dx, dy = config.PURCHASE_COUNT_OFFSET
             write(screen, small_font, f'x{count}', config.DARK_BLUE, (x + dx, y + dy))
 
+    effects.draw(screen, font, assets.coin)
     draw_tooltip(screen, small_font, state, mouse_pos)

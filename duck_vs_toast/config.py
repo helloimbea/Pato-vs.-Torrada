@@ -15,7 +15,7 @@ SCREEN_HEIGHT = 720
 TITLE = 'Duck vs. Toast'
 FONT_SIZE = 48
 SMALL_FONT_SIZE = 28  # purchase counters and tooltips
-FPS = 30  # frame rate limit (the game has no animations yet)
+FPS = 30  # frame rate limit
 
 # --- Colors ---
 RED = (234, 95, 112)
@@ -57,6 +57,20 @@ DAMAGE_TEXT_POS = (72, 235)
 REWARD_TEXT_POS = (610, 448)
 BOSS_TIMER_TEXT_POS = (711, 114)
 LEVEL_TEXT_POS = (1100, 68)
+
+# --- Animations (times in milliseconds) ---
+DAMAGE_NUMBER_DURATION = 800   # how long a damage number stays on screen
+DAMAGE_NUMBER_RISE = 70        # how many pixels it floats up
+MAX_DAMAGE_NUMBERS = 25        # older numbers disappear when there are more than this
+SHAKE_DURATION = 150           # how long the toast shakes after a hit
+SHAKE_STRENGTH = 5             # how many pixels it moves while shaking
+COINS_PER_DEFEAT = 6
+COIN_DELAY = 60                # coins leave the toast one after another
+COIN_BURST_TIME = 250          # coins pop out of the toast...
+COIN_FLIGHT_TIME = 550         # ...then fly to the Duckcoins counter
+COIN_SIZE = 34
+DUCKCOINS_ICON_POS = (82, 61)  # center of the coin drawn in the Duckcoins box (map image)
+DUCKCOINS_ICON_RADIUS = 28
 
 # --- Timings (in milliseconds) ---
 DPS_INTERVAL = 1000                  # how often DPS damage is applied (1000 = once per second)

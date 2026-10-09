@@ -26,6 +26,18 @@ def load_folder(category):
     return images
 
 
+def cut_coin(game_map):
+    """Copy the Duckcoin drawn on the map (top left), for the flying-coin animation."""
+    radius = config.DUCKCOINS_ICON_RADIUS
+    x, y = config.DUCKCOINS_ICON_POS
+    coin = pygame.Surface((2 * radius, 2 * radius), pygame.SRCALPHA)
+    mask = pygame.Surface((2 * radius, 2 * radius), pygame.SRCALPHA)
+    pygame.draw.circle(mask, (255, 255, 255, 255), (radius, radius), radius)
+    coin.blit(game_map, (0, 0), (x - radius, y - radius, 2 * radius, 2 * radius))
+    coin.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)  # keep only the round part
+    return pygame.transform.smoothscale(coin, (config.COIN_SIZE, config.COIN_SIZE))
+
+
 class Assets:
     """Holds every image and sound in the game.
 
@@ -38,6 +50,7 @@ class Assets:
         self.ducks = load_folder('ducks')
         self.toasts = load_folder('toasts')
         self.ui = load_folder('ui')
+        self.coin = cut_coin(game_map)
         self.click_sound = None  # stays None when there is no audio device (e.g. Codespaces)
         if pygame.mixer.get_init():
             self.click_sound = pygame.mixer.Sound(os.path.join(config.SOUNDS_DIR, 'quack.wav'))

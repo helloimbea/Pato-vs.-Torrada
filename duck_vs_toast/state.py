@@ -42,6 +42,10 @@ class GameState:
         # Settings
         self.muted = False
 
+        # Called when a toast is hit / beaten, so the screen can animate it (see effects.py)
+        self.on_hit = lambda _amount, _kind: None
+        self.on_defeat = lambda: None
+
         self.load_level()
 
     # --- Levels ---
@@ -82,15 +86,18 @@ class GameState:
 
     # --- Combat ---
 
-    def deal_damage(self, amount):
+    def deal_damage(self, amount, kind='click'):
+        """Hit the toast. kind is 'click', 'auto' (muscular duck) or 'dps'."""
         if self.health == 0:
             return
         self.health = max(self.health - amount, 0)
+        self.on_hit(amount, kind)
         if self.health == 0:
             self.defeat_toast()
 
     def defeat_toast(self):
         """Give the reward and move on to the next toast (or repeat the level)."""
+        self.on_defeat()
         self.duckcoins += self.reward
         self.highest_level = max(self.highest_level, self.level + 1)
         if self.level_advance:
@@ -119,13 +126,13 @@ class GameState:
             hit, self.last_auto_click = self.interval_passed(
                 now, self.last_auto_click, self.auto_click_interval)
             if hit:
-                self.deal_damage(self.damage)
+                self.deal_damage(self.damage, 'auto')
 
         # Damage per second
         if self.dps > 0:
             hit, self.last_dps = self.interval_passed(now, self.last_dps, config.DPS_INTERVAL)
             if hit:
-                self.deal_damage(self.dps)
+                self.deal_damage(self.dps, 'dps')
 
         # If the boss timer runs out, the boss gets all its health back
         if self.is_boss() and now - self.boss_start >= config.BOSS_TIME_LIMIT and self.health > 0:
