@@ -92,8 +92,11 @@ class Effects:
         """True right after a hit, while the toast shows its pained face."""
         return self.clock() - self.squish_start < config.HURT_DURATION
 
-    def coin_position(self, coin, now):
-        """Where a coin is: first a quick burst out of the toast, then a flight to the counter."""
+    def coin_position(self, coin, now, target=config.DUCKCOINS_ICON_POS):
+        """Where a coin is: first a quick burst out of the toast, then a flight to the counter.
+
+        target is where the Duckcoins counter is, measured from the toast's part of the screen.
+        """
         elapsed = now - coin.start
         burst_time = config.COIN_BURST_TIME
         if elapsed < burst_time:
@@ -101,7 +104,7 @@ class Effects:
             start, end = coin.start_pos, coin.burst_pos
         else:
             t = ease_in((elapsed - burst_time) / config.COIN_FLIGHT_TIME)
-            start, end = coin.burst_pos, config.DUCKCOINS_ICON_POS
+            start, end = coin.burst_pos, target
         return start[0] + (end[0] - start[0]) * t, start[1] + (end[1] - start[1]) * t
 
     def update(self):
@@ -112,18 +115,22 @@ class Effects:
         coin_time = config.COIN_BURST_TIME + config.COIN_FLIGHT_TIME
         self.coins = [c for c in self.coins if now - c.start < coin_time]
 
-    def draw(self, screen, font, coin_image):
+    def draw(self, screen, font, coin_image, offset=(0, 0), coin_target=config.DUCKCOINS_ICON_POS):
+        """offset: where the toast's part of the screen is (see layout.py);
+        coin_target: where the coins fly to, on the screen."""
         now = self.clock()
+        offset_x, offset_y = offset
+        target = (coin_target[0] - offset_x, coin_target[1] - offset_y)
         for coin in self.coins:
-            x, y = self.coin_position(coin, now)
-            screen.blit(coin_image, coin_image.get_rect(center=(x, y)))
+            x, y = self.coin_position(coin, now, target)
+            screen.blit(coin_image, coin_image.get_rect(center=(x + offset_x, y + offset_y)))
 
         for number in self.damage_numbers:
             progress = (now - number.start) / config.DAMAGE_NUMBER_DURATION
             text = outlined(font, number.text, number.color)
             text.set_alpha(round(255 * (1 - progress ** 2)))  # fades out faster at the end
             y = number.y - config.DAMAGE_NUMBER_RISE * ease_out(progress)
-            screen.blit(text, text.get_rect(center=(number.x, y)))
+            screen.blit(text, text.get_rect(center=(number.x + offset_x, y + offset_y)))
 
 
 def outlined(font, text, color, outline=(255, 255, 255), width=2):
