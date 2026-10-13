@@ -1,7 +1,7 @@
 """Duck shop: what each duck costs and what it does when bought.
 
 To create a new duck:
-  1. put its image (and its "locked_" version) in assets/images/ducks;
+  1. put its image in assets/images/ducks (the "locked" sign over its button is shared);
   2. write an effect function (like the ones below);
   3. write a description function for the tooltip, and its name and text in i18n.py
      (in English and Portuguese, under the duck's name);
@@ -30,10 +30,6 @@ class Duck:
     def title(self):
         """Name shown in the tooltip, in the current language (see i18n.py)."""
         return t(self.name)
-
-    @property
-    def locked_image(self):
-        return 'locked_' + self.name
 
 
 # --- Duck effects ---

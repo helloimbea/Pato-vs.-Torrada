@@ -71,6 +71,8 @@ and say how the pace changed (today: level 54 in about 55 minutes).
   without the bread), `assets.split_bread` cuts it out at startup so it can squash with the face. A pained face is an optional `<toast>_hurt.png` the owner
   draws; until it exists, the toast turns reddish while hurt. Likewise `<toast>_dead.png` is the face of a
   beaten toast as it shrinks away (gray tint until drawn); the next toast pops up meanwhile.
+- One shared "locked" sign (`ui/locked.png`, positioned over the first duck's button) is drawn
+  over every shop button the player can't afford yet; there are no per-duck locked images.
 - A bought duck stretches and squashes (and a new one grows in), via `GameState.on_buy`.
 - The Duckcoins counter shows `effects.shown_duckcoins`: it rolls up once the flying coins
   arrive and drops at once when spending; `effects.update(state.duckcoins)` drives it.

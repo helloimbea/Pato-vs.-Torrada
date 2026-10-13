@@ -99,7 +99,7 @@ Pato-vs.-Torrada/
 │   └── crop_images.py      # Crops full-screen drawings and saves where they go
 ├── assets/
 │   ├── images/
-│   │   ├── ducks/          # Ducks and locked-duck cards
+│   │   ├── ducks/          # Ducks
 │   │   ├── toasts/         # Toast enemies
 │   │   ├── ui/             # Buttons, pointer, boxes
 │   │   ├── maps/           # Backgrounds

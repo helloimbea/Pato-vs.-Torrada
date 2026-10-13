@@ -244,6 +244,18 @@ def draw_level_buttons(screen, font, assets, state):
     localized(assets.ui, 'language_' + i18n.language).draw(screen)
 
 
+def draw_locked(screen, assets, button_pos):
+    """Draw the "locked" sign over a shop button.
+
+    ui/locked.png is drawn (and positioned) over the first duck's button; for the other
+    buttons it moves by the distance between the buttons.
+    """
+    locked = assets.ui['locked']
+    first_x, first_y = DUCKS[0].button_pos
+    screen.blit(locked.image, (locked.pos[0] + button_pos[0] - first_x,
+                               locked.pos[1] + button_pos[1] - first_y))
+
+
 def draw_shop(screen, font, small_font, assets, state):
     """Prices, locked ducks and how many of each duck was bought (bottom)."""
     for duck in DUCKS:
@@ -252,12 +264,12 @@ def draw_shop(screen, font, small_font, assets, state):
     # Ducks the player can't afford yet are shown as "locked"
     for duck in DUCKS:
         if state.duckcoins < state.costs[duck.name]:
-            localized(assets.ducks, duck.locked_image).draw(screen)
+            draw_locked(screen, assets, duck.button_pos)
 
     # Bourgeois Duck: fixed price; after buying it, a boost and then a recharge time
     write(screen, font, format_number(config.BOURGEOIS_COST), config.BLUE, config.BOURGEOIS_COST_TEXT_POS)
     if not shop.can_buy_bourgeois(state):
-        localized(assets.ducks, 'locked_bourgeois_duck').draw(screen)
+        draw_locked(screen, assets, config.BOURGEOIS_BUTTON_POS)
     if state.is_boosted():
         timer, color = state.boost_time_left(), config.BOOST_COLOR
     else:
