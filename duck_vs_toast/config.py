@@ -95,6 +95,10 @@ SQUISH_WIDTH = 0.08            # at most 8% wider...
 SQUISH_HEIGHT = 0.14           # ...and 14% shorter
 HURT_DURATION = 300            # how long the pained face stays
 HURT_TINT = (255, 205, 205)    # reddish tint used while a toast has no "_hurt" drawing yet
+# How strongly the toast reacts to each kind of hit (1 = the full reaction to a click):
+# the shake, the squash and how long the pained face stays all get this much smaller.
+HIT_STRENGTH = {'click': 1.0, 'auto': 0.6, 'dps': 0.4}
+AUTO_CLICK_TIP = (738, 355)    # tip of the muscular duck's pointer: its damage numbers pop up here
 REWARD_BADGE_RECT = (495, 430, 115, 60)  # the "+ coin" under the toast, drawn in front of it
 TOAST_TITLE_BOTTOM = 95        # the toast images have their name above this line; it doesn't squish
 DEATH_DURATION = 220           # a beaten toast shrinks away this fast

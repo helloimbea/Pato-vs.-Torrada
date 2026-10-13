@@ -55,16 +55,49 @@ def test_damage_numbers_are_limited(effects):
     assert len(fx.damage_numbers) == config.MAX_DAMAGE_NUMBERS
 
 
-def test_toast_shakes_on_clicks_but_not_on_dps(effects):
+def test_toast_shakes_on_every_hit(effects):
+    fx, clock = effects
+    for kind in ('click', 'auto', 'dps'):
+        clock.now += 1000
+        assert fx.toast_offset() == (0, 0)
+        fx.hit(1, kind, (600, 300) if kind == 'click' else None)
+        clock.now += 20
+        assert fx.toast_offset() != (0, 0)
+        clock.now += config.SHAKE_DURATION
+        assert fx.toast_offset() == (0, 0)
+
+
+def test_automatic_hits_make_the_toast_react_more_gently(effects):
+    fx, clock = effects
+    squish = {}
+    for kind in ('click', 'auto', 'dps'):
+        clock.now += 1000
+        fx.hit(1, kind, (600, 300) if kind == 'click' else None)
+        clock.now += config.SQUISH_DURATION // 2
+        squish[kind] = fx.squish()
+    assert squish['click'] > squish['auto'] > squish['dps'] > 0
+
+
+def test_gentle_hit_doesnt_cut_short_a_click_reaction(effects):
     fx, clock = effects
     clock.now = 1000
-    fx.hit(1, 'dps')
-    assert fx.toast_offset() == (0, 0)
     fx.hit(1, 'click', (600, 300))
-    clock.now += 20
-    assert fx.toast_offset() != (0, 0)
-    clock.now += config.SHAKE_DURATION
-    assert fx.toast_offset() == (0, 0)
+    clock.now += config.SQUISH_DURATION // 2
+    fx.hit(1, 'dps')
+    assert fx.squish() == pytest.approx(1)  # still the click's full flinch
+    clock.now = 1000 + config.HURT_DURATION
+    fx.hit(1, 'dps')  # the click's reaction is over: now the gentle one plays
+    clock.now += config.SQUISH_DURATION // 2
+    assert fx.squish() == pytest.approx(config.HIT_STRENGTH['dps'])
+
+
+def test_damage_numbers_pop_where_the_hit_came_from(effects):
+    fx, _ = effects
+    fx.hit(3, 'auto')
+    fx.hit(4, 'dps')
+    auto, dps = fx.damage_numbers
+    assert abs(auto.x - config.AUTO_CLICK_TIP[0]) <= 15 and auto.y == config.AUTO_CLICK_TIP[1]
+    assert pygame.Rect(config.TOAST_RECT).collidepoint(dps.x, dps.y)
 
 
 def test_coins_fly_to_the_duckcoins_counter(effects):
@@ -86,7 +119,7 @@ def test_toast_flinches_and_looks_hurt_after_any_hit(effects):
     fx, clock = effects
     clock.now = 1000
     assert fx.squish() == 0 and not fx.is_hurt()
-    fx.hit(12.5, 'dps')
+    fx.hit(5, 'click', (600, 300))
     clock.now += config.SQUISH_DURATION // 2
     assert fx.squish() == pytest.approx(1)  # most squashed halfway through
     assert fx.is_hurt()
