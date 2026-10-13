@@ -73,6 +73,9 @@ and say how the pace changed (today: level 54 in about 55 minutes).
   beaten toast as it shrinks away (gray tint until drawn); the next toast pops up meanwhile.
 - One shared "locked" sign (`ui/locked.png`, drawn over the Siamese portrait) is resized and
   moved onto each duck's portrait circle (`config.SHOP_PORTRAITS`) when the player can't afford it.
+- Automatic hits react like a click, only gentler (`config.HIT_STRENGTH`: click 1, muscular duck 0.6,
+  DPS 0.4) and never cut short a stronger reaction; the muscular duck's numbers pop at its pointer's
+  tip (`AUTO_CLICK_TIP`), DPS numbers at a random spot on the toast.
 - A bought duck stretches and squashes (and a new one grows in), via `GameState.on_buy`.
 - The Duckcoins counter shows `effects.shown_duckcoins`: it rolls up once the flying coins
   arrive and drops at once when spending; `effects.update(state.duckcoins)` drives it.

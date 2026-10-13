@@ -108,7 +108,7 @@ def main():
     overlay = 'start'  # 'start', 'paused', 'victory' or None while playing
 
     effects = Effects(clock=game_clock)
-    # Clicks pop their damage number where the mouse is; automatic hits pop over the toast
+    # Clicks pop their damage number where the mouse is; automatic hits pop on the toast
     state.on_hit = lambda amount, kind: effects.hit(
         amount, kind, layout.to_group('center', pygame.mouse.get_pos()) if kind == 'click' else None)
     state.on_defeat = lambda: effects.defeat(state.toast)  # still the beaten toast here

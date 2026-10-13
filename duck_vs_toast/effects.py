@@ -44,6 +44,7 @@ class Effects:
         self.coins = []
         self.shake_start = -config.SHAKE_DURATION
         self.squish_start = -config.HURT_DURATION
+        self.strength = 1  # how strong the current flinch is (see config.HIT_STRENGTH)
         self.dead_toast = None  # the toast that was just beaten, while it shrinks away
         self.death_start = None  # when the last toast was beaten (None: not yet)
         self.shown_duckcoins = None  # the number on the Duckcoins counter (see update)
@@ -54,21 +55,30 @@ class Effects:
     # --- Things that happened in the game ---
 
     def hit(self, amount, kind, position=None):
-        """A toast was hit. kind is 'click', 'auto' (muscular duck) or 'dps'."""
+        """A toast was hit. kind is 'click', 'auto' (muscular duck) or 'dps'.
+
+        Automatic hits make the toast react like a click, only more gently.
+        """
         now = self.clock()
-        if position is None:  # automatic hits pop up somewhere over the toast
-            x, y, width, _ = config.TOAST_RECT
-            position = (x + self.random.uniform(0.15, 0.85) * width, y + 40)
-        else:  # a little sideways jitter, so fast clicks don't pile up in one spot
+        if position is None and kind == 'auto':  # the muscular duck's pointer "clicks" the toast
+            position = config.AUTO_CLICK_TIP
+        if position is None:  # DPS damage pops up somewhere on the toast
+            x, y, width, height = config.TOAST_RECT
+            position = (x + self.random.uniform(0.2, 0.8) * width,
+                        y + self.random.uniform(0.15, 0.6) * height)
+        else:  # a little sideways jitter, so fast hits don't pile up in one spot
             position = (position[0] + self.random.uniform(-15, 15), position[1])
         color = config.TIMER_BLUE if kind == 'dps' else config.RED
         self.damage_numbers.append(
             DamageNumber(format_number(amount), color, position[0], position[1], now))
         # Many hits per second would fill the screen, so only the newest ones stay
         del self.damage_numbers[:-config.MAX_DAMAGE_NUMBERS]
-        if kind != 'dps':  # the toast shakes on clicks; DPS ticks would keep it shaking forever
+        # A gentle hit doesn't cut short a stronger reaction that is still going on
+        strength = config.HIT_STRENGTH[kind]
+        if not (self.is_hurt() and self.strength > strength):
+            self.strength = strength
             self.shake_start = now
-        self.squish_start = now  # every hit makes it flinch (DPS only once per second)
+            self.squish_start = now
 
     def defeat(self, toast=None):
         """A toast was beaten: it shrinks away, and coins fly to the Duckcoins counter.
@@ -95,7 +105,7 @@ class Effects:
         elapsed = self.clock() - self.shake_start
         if elapsed >= config.SHAKE_DURATION:
             return 0, 0
-        strength = config.SHAKE_STRENGTH * (1 - elapsed / config.SHAKE_DURATION)
+        strength = config.SHAKE_STRENGTH * self.strength * (1 - elapsed / config.SHAKE_DURATION)
         return round(math.sin(elapsed / 15) * strength), round(math.cos(elapsed / 20) * strength / 2)
 
     def squish(self):
@@ -103,11 +113,11 @@ class Effects:
         elapsed = self.clock() - self.squish_start
         if elapsed >= config.SQUISH_DURATION:
             return 0
-        return math.sin(math.pi * elapsed / config.SQUISH_DURATION)
+        return self.strength * math.sin(math.pi * elapsed / config.SQUISH_DURATION)
 
     def is_hurt(self):
-        """True right after a hit, while the toast shows its pained face."""
-        return self.clock() - self.squish_start < config.HURT_DURATION
+        """True right after a hit, while the toast shows its pained face (shorter for gentle hits)."""
+        return self.clock() - self.squish_start < config.HURT_DURATION * self.strength
 
     def duck_bought(self, name, first_time):
         """A duck was bought: it stretches and squashes (and grows in, if it is new)."""
