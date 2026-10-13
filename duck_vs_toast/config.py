@@ -63,6 +63,18 @@ SHOP_BUTTON_RADIUS = 40
 PURCHASE_COUNT_OFFSET = (48, -12)  # where "x3" is written, relative to each buy button's center
 BOURGEOIS_BUTTON_POS = (1125, 603)
 
+# The round duck portraits drawn on the shop: (center x, center y, diameter).
+# The "locked" sign (ui/locked.png) was drawn over the Siamese duck's portrait; on the
+# others it is resized and moved to fit their circle. A duck missing here uses the
+# Siamese size, centered on its buy button.
+SHOP_PORTRAITS = {
+    'siamese_duck': (155.5, 617, 86),
+    'double_duck': (398.5, 614, 85),
+    'muscular_duck': (643.5, 611, 83),
+    'realistic_duck': (882.5, 608.5, 79),
+    'bourgeois_duck': (1125.5, 613.5, 81),
+}
+
 # --- Text positions ---
 HEALTH_TEXT_POS = (541, 115)
 DUCKCOINS_TEXT_POS = (130, 45)
