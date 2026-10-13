@@ -244,6 +244,28 @@ def draw_level_buttons(screen, font, assets, state):
     localized(assets.ui, 'language_' + i18n.language).draw(screen)
 
 
+_locked_sizes = {}  # the locked sign resized for each portrait size, made when first needed
+
+
+def draw_locked(screen, assets, name, button_pos):
+    """Draw the "locked" sign over a duck's portrait in the shop.
+
+    ui/locked.png is drawn over the Siamese duck's portrait; for the other ducks it is
+    resized and moved so it fits their circle (config.SHOP_PORTRAITS).
+    """
+    locked = assets.ui['locked']
+    ref_x, ref_y, ref_size = config.SHOP_PORTRAITS['siamese_duck']
+    x, y, size = config.SHOP_PORTRAITS.get(name, (*button_pos, ref_size))
+    scale = size / ref_size
+    key = (id(locked.image), size)
+    if key not in _locked_sizes:
+        width, height = locked.image.get_size()
+        _locked_sizes[key] = pygame.transform.smoothscale(
+            locked.image, (round(width * scale), round(height * scale)))
+    screen.blit(_locked_sizes[key], (round(x + (locked.pos[0] - ref_x) * scale),
+                                     round(y + (locked.pos[1] - ref_y) * scale)))
+
+
 def draw_shop(screen, font, small_font, assets, state):
     """Prices, locked ducks and how many of each duck was bought (bottom)."""
     for duck in DUCKS:
@@ -252,12 +274,12 @@ def draw_shop(screen, font, small_font, assets, state):
     # Ducks the player can't afford yet are shown as "locked"
     for duck in DUCKS:
         if state.duckcoins < state.costs[duck.name]:
-            localized(assets.ducks, duck.locked_image).draw(screen)
+            draw_locked(screen, assets, duck.name, duck.button_pos)
 
     # Bourgeois Duck: fixed price; after buying it, a boost and then a recharge time
     write(screen, font, format_number(config.BOURGEOIS_COST), config.BLUE, config.BOURGEOIS_COST_TEXT_POS)
     if not shop.can_buy_bourgeois(state):
-        localized(assets.ducks, 'locked_bourgeois_duck').draw(screen)
+        draw_locked(screen, assets, 'bourgeois_duck', config.BOURGEOIS_BUTTON_POS)
     if state.is_boosted():
         timer, color = state.boost_time_left(), config.BOOST_COLOR
     else:

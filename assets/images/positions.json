@@ -1,10 +1,5 @@
 {
   "ducks/double_duck": [989, 155],
-  "ducks/locked_bourgeois_duck": [1078, 568],
-  "ducks/locked_double_duck": [349, 565],
-  "ducks/locked_muscular_duck": [591, 560],
-  "ducks/locked_realistic_duck": [833, 561],
-  "ducks/locked_siamese_duck": [105, 566],
   "ducks/muscular_duck": [771, 48],
   "ducks/realistic_duck": [77, 205],
   "ducks/siamese_duck": [288, 91],
@@ -26,6 +21,7 @@
   "ui/language_pt": [1232, 50],
   "ui/level_advance_off": [1018, 24],
   "ui/level_advance_on": [1018, 24],
+  "ui/locked": [105, 566],
   "ui/next_level_off": [1177, 53],
   "ui/next_level_on": [1177, 53],
   "ui/sound_off": [1232, 6],
