@@ -38,6 +38,7 @@ class GameState:
         self.costs = {duck.name: duck.starting_cost for duck in DUCKS}
         self.ducks_on_screen = []
         self.purchases = {duck.name: 0 for duck in DUCKS}
+        self.duck_bumps = {}  # duck name -> how many times it was thrown at a toast
 
         # Bourgeois Duck: a boost for a while, then it has to recharge (times from clock())
         self.boost_end = None       # when the current boost ends
@@ -136,10 +137,52 @@ class GameState:
         """Duckcoins for beating the current toast, with the Bourgeois boost."""
         return self.reward * self.reward_multiplier()
 
+    # --- Throwing ducks ---
+    # The ducks can be grabbed and thrown at the toast (see throwing.py). Each hit hurts
+    # the duck a little; after DUCK_MAX_BUMPS hits it is battered and has to be healed
+    # (with Duckcoins) before it can be thrown again. It keeps its shop bonus all the time.
+
+    def throwable_ducks(self):
+        """Every duck on screen: the starter duck and the ducks bought in the shop."""
+        return ['starter_duck'] + self.ducks_on_screen
+
+    def bumps(self, name):
+        return self.duck_bumps.get(name, 0)
+
+    def is_battered(self, name):
+        return self.bumps(name) >= config.DUCK_MAX_BUMPS
+
+    def throw_damage(self):
+        """Damage of a thrown duck: a share of the toast's full health (with the Bourgeois boost)."""
+        share = config.THROW_BOSS_DAMAGE if self.is_boss() else config.THROW_DAMAGE
+        return max(1, round(self.max_health * share)) * self.damage_multiplier()
+
+    def duck_hits_toast(self, name):
+        """A thrown duck hit the toast. Returns False if it can't do damage (it is battered)."""
+        if self.is_battered(name):
+            return False
+        self.duck_bumps[name] = self.bumps(name) + 1
+        self.deal_damage(self.throw_damage(), 'throw')
+        return True
+
+    def heal_cost(self):
+        """Duckcoins to heal a battered duck: about one toast of the current level."""
+        level = self.level - 1 if self.is_boss() else self.level
+        return max(1, round(levels.reward_for(level) * config.HEAL_COST_REWARDS))
+
+    def heal_duck(self, name):
+        """Heal a battered duck. Returns True if it was healed."""
+        cost = self.heal_cost()
+        if not self.is_battered(name) or self.duckcoins < cost:
+            return False
+        self.duckcoins -= cost
+        self.duck_bumps[name] = 0
+        return True
+
     # --- Combat ---
 
     def deal_damage(self, amount, kind='click'):
-        """Hit the toast. kind is 'click', 'auto' (muscular duck) or 'dps'."""
+        """Hit the toast. kind is 'click', 'auto' (muscular duck), 'dps' or 'throw'."""
         if self.health == 0:
             return
         self.health = max(self.health - amount, 0)

@@ -55,7 +55,7 @@ class Effects:
     # --- Things that happened in the game ---
 
     def hit(self, amount, kind, position=None):
-        """A toast was hit. kind is 'click', 'auto' (muscular duck) or 'dps'.
+        """A toast was hit. kind is 'click', 'auto' (muscular duck), 'dps' or 'throw'.
 
         Automatic hits make the toast react like a click, only more gently.
         """

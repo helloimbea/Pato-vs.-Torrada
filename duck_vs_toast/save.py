@@ -16,7 +16,7 @@ SAVE_VERSION = 1
 SAVED_FIELDS = [
     'duckcoins', 'level', 'level_advance', 'highest_level',
     'damage', 'dps', 'dps_base', 'has_auto_click', 'auto_click_interval',
-    'costs', 'purchases', 'ducks_on_screen', 'bourgeois_purchases',
+    'costs', 'purchases', 'ducks_on_screen', 'bourgeois_purchases', 'duck_bumps',
     'muted', 'victory_seen', 'language',
 ]
 

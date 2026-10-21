@@ -97,7 +97,7 @@ HURT_DURATION = 300            # how long the pained face stays
 HURT_TINT = (255, 205, 205)    # reddish tint used while a toast has no "_hurt" drawing yet
 # How strongly the toast reacts to each kind of hit (1 = the full reaction to a click):
 # the shake, the squash and how long the pained face stays all get this much smaller.
-HIT_STRENGTH = {'click': 1.0, 'auto': 0.6, 'dps': 0.4}
+HIT_STRENGTH = {'click': 1.0, 'auto': 0.6, 'dps': 0.4, 'throw': 1.5}
 AUTO_CLICK_TIP = (738, 355)    # tip of the muscular duck's pointer: its damage numbers pop up here
 REWARD_BADGE_RECT = (495, 430, 115, 60)  # the "+ coin" under the toast, drawn in front of it
 TOAST_TITLE_BOTTOM = 95        # the toast images have their name above this line; it doesn't squish
@@ -136,6 +136,24 @@ BOURGEOIS_COOLDOWN = 600_000         # ...and it can be bought again 10 minutes 
 BOURGEOIS_DAMAGE_MULTIPLIER = 2      # all damage (clicks, DPS, muscular duck) while boosted
 BOURGEOIS_REWARD_MULTIPLIER = 2      # Duckcoins from each toast while boosted
 BOURGEOIS_COST_TEXT_POS = (1105, 675)
+
+# --- Throwing ducks ---
+THROW_DAMAGE = 0.10            # a thrown duck takes 10% of a toast's full health...
+THROW_BOSS_DAMAGE = 0.04       # ...or 4% of a boss's (all the ducks together could beat a boss)
+DUCK_MAX_BUMPS = 5             # after this many hits a duck is battered and can't be thrown
+HEAL_COST_REWARDS = 1          # healing a battered duck costs this many toasts' worth of Duckcoins
+                               # (the current level's reward; on a boss level, the level before)
+THROW_GRAVITY = 0.0025         # pixels per millisecond, per millisecond: thrown ducks fall
+THROW_MAX_SPEED = 4            # pixels per millisecond: a very fast flick is slowed to this
+THROW_SPIN = 0.6               # how fast a thrown duck turns, for its sideways speed
+THROW_FLIGHT_TIME = 900        # a duck that misses flies this long before going home
+THROW_RETURN_TIME = 450        # how long a duck takes to go back to its spot
+THROW_RETURN_ARC = 60          # how high it hops on the way back
+THROW_HIT_MARGIN = 20          # the toast counts as hit a little inside its edges
+GRAB_ALPHA = 60                # only grab a duck by its drawing, not its see-through corners
+HELD_LIFT = 1.08               # a held duck looks a bit bigger, as if picked up
+BATTERED_TINT = (185, 185, 195)  # a battered duck turns gray (until "<duck>_battered.png" is drawn)
+BANDAGE_COLOR = (240, 205, 160)
 
 # --- Saving and offline earnings ---
 SAVE_FILE = os.path.join(os.path.expanduser('~'), '.duck_vs_toast', 'save.json')

@@ -10,8 +10,9 @@ from .effects import Effects
 from .i18n import t
 from .layout import Layout
 from .numbers import format_number
-from .screen import Screen
+from .screen import Screen, duck_sprites
 from .state import GameState
+from .throwing import Throws
 
 
 def clicked_circle(mouse_pos, center, radius):
@@ -55,8 +56,27 @@ def handle_click(event, state, assets, toast_rect, layout):
             hit_something = True
 
     # Quack only when the click hit the toast or a button
-    if hit_something and assets.click_sound and not state.muted:
+    if hit_something:
+        play_quack(assets, state)
+
+
+def play_quack(assets, state):
+    if assets.click_sound and not state.muted:
         assets.click_sound.play()
+
+
+def press_duck(name, state, effects, throws, point, sprites):
+    """The left button was pressed on a duck: pick it up, or heal it if it is battered.
+
+    Returns True if it was healed (for the quack).
+    """
+    if not state.is_battered(name):
+        throws.grab(name, point, sprites[name])
+        return False
+    if state.heal_duck(name):
+        effects.duck_bought(name, False)  # a happy wobble
+        return True
+    return False
 
 
 def overlay_lines(screen_name, away=0, earned=0):
@@ -108,9 +128,18 @@ def main():
     overlay = 'start'  # 'start', 'paused', 'victory' or None while playing
 
     effects = Effects(clock=game_clock)
-    # Clicks pop their damage number where the mouse is; automatic hits pop on the toast
-    state.on_hit = lambda amount, kind: effects.hit(
-        amount, kind, layout.to_group('center', pygame.mouse.get_pos()) if kind == 'click' else None)
+    throws = Throws(clock=game_clock)
+
+    def hit_position(kind):
+        """Clicks pop their damage number where the mouse is, thrown ducks where they hit;
+        automatic hits pop on the toast."""
+        if kind == 'click':
+            return layout.to_group('center', pygame.mouse.get_pos())
+        if kind == 'throw':
+            return throws.impact
+        return None
+
+    state.on_hit = lambda amount, kind: effects.hit(amount, kind, hit_position(kind))
     state.on_defeat = lambda: effects.defeat(state.toast)  # still the beaten toast here
     state.on_buy = effects.duck_bought
     mouse_button_down = False
@@ -138,9 +167,21 @@ def main():
                     game_clock.resume()
             elif escape:
                 overlay = 'paused'
+                throws.drop()
                 game_clock.pause()
             elif clicked:
-                handle_click(event, state, assets, toast_rect, layout)
+                # A press on a duck picks it up (see throwing.py); anywhere else is a normal click
+                in_center = layout.to_group('center', event.pos)
+                sprites = duck_sprites(assets, state)
+                name = throws.duck_at(in_center, sprites)
+                if name is None:
+                    handle_click(event, state, assets, toast_rect, layout)
+                elif press_duck(name, state, effects, throws, in_center, sprites):
+                    play_quack(assets, state)
+            elif event.type == pygame.MOUSEMOTION and throws.held:
+                throws.move(layout.to_group('center', event.pos))
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1 and throws.held:
+                throws.release(layout.to_group('center', event.pos))
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
                 state.toggle_mute()
@@ -164,8 +205,10 @@ def main():
             layout = Layout(window.get_size())
         now = game_clock()
         state.update(now)
+        if throws.update(state, duck_sprites(assets, state)):
+            play_quack(assets, state)
         effects.update(state.duckcoins)
         lines = overlay_lines(overlay, away or 0, earned) if overlay else None
-        screen.draw(window, layout, state, effects, now, pygame.mouse.get_pos(), lines)
+        screen.draw(window, layout, state, effects, throws, now, pygame.mouse.get_pos(), lines)
         pygame.display.update()
         clock.tick(config.FPS)

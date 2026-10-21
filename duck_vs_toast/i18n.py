@@ -37,6 +37,11 @@ TEXTS = {
         'bourgeois_active': 'Active! {time} left.',
         'bourgeois_recharging': 'Recharging: ready in {time}.',
         'bourgeois_recharge_info': 'Recharges for {minutes} min after buying.',
+        'starter_duck': 'Starter Duck',
+        'throw_hint': 'Drag me and throw me at the toast!',
+        'throws_left': 'Throws left: {count}/{total}',
+        'battered': 'All battered up!',
+        'heal_for': 'Click to heal: {cost} Duckcoins',
     },
     'pt': {
         'title': 'Pato vs. Torrada',
@@ -62,6 +67,11 @@ TEXTS = {
         'bourgeois_active': 'Ativo! Faltam {time}.',
         'bourgeois_recharging': 'Recarregando: pronto em {time}.',
         'bourgeois_recharge_info': 'Recarrega por {minutes} min depois de comprar.',
+        'starter_duck': 'Pato Inicial',
+        'throw_hint': 'Me arraste e me jogue na torrada!',
+        'throws_left': 'Arremessos restantes: {count}/{total}',
+        'battered': 'Todo amassado!',
+        'heal_for': 'Clique para curar: {cost} Duckcoins',
     },
 }
 

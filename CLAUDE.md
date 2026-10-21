@@ -30,6 +30,7 @@ duck_vs_toast/
   i18n.py                  texts written by code, English + Portuguese; t('key')
   numbers.py               short numbers: 1500 -> "1.5 K"
   effects.py               animations: damage numbers, toast shake, flying coins
+  throwing.py              dragging ducks and throwing them at the toast (movement only)
   assets.py                loads images and sounds
   game.py                  main loop, clicks and keys
 tools/simulate_balance.py  virtual player that measures the game's pace
@@ -92,6 +93,14 @@ and say how the pace changed (today: level 54 in about 55 minutes).
 - Screens: start (with "welcome back" earnings), pause (Esc), victory once all toasts are beaten
   (`state.has_won`, shown once). They are text drawn by code in `game.py`; the game clock is
   paused behind them.
+- Throwing ducks (owner's idea): every duck on screen, the starter duck too, can be dragged
+  and flung at the toast. A hit takes `THROW_DAMAGE` (10%) of the toast's full health, 4% on a
+  boss (`THROW_BOSS_DAMAGE`), times the Bourgeois boost. Each hit bumps the duck; after
+  `DUCK_MAX_BUMPS` (5) it is battered: can't be thrown, but keeps its shop bonus. Clicking a
+  battered duck heals it for `heal_cost()` (one toast of the current level; the level before
+  on a boss). Rules in `GameState` (`duck_hits_toast`, `heal_duck`, saved as `duck_bumps`),
+  movement in `throwing.py`. A worn duck turns grayer per hit; battered gets a bandage drawn
+  by code until the owner draws `<duck>_battered.png`. The simulator doesn't throw ducks.
 - Languages (owner asked 2026-10-09): English and Portuguese, switched with L or the EN/PT button
   (placeholder icons `ui/language_en.png`, `ui/language_pt.png`), saved with the progress; first run
   uses the computer's language. Code text lives in `i18n.py` (every key in both languages; tests
