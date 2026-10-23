@@ -2,7 +2,7 @@
 import pygame
 
 from . import config, i18n, shop
-from .assets import Sprite, localized
+from .assets import Sprite, load_font, localized
 from .effects import ease_in, outlined
 from .i18n import t
 from .numbers import format_number
@@ -10,7 +10,8 @@ from .shop import DUCKS
 
 
 def write(screen, font, text, color, position):
-    screen.blit(font.render(text, True, color), position)
+    nudge = getattr(font, 'nudge', 0)  # see assets.load_font
+    screen.blit(font.render(text, True, color), (position[0], position[1] + nudge))
 
 
 def hovered_duck(mouse_pos):
@@ -108,7 +109,47 @@ def draw_dead_toast(screen, assets, name, progress):
     screen.blit(image, image.get_rect(center=body.center))
 
 
-def draw_toast(screen, assets, state, effects):
+def fit(text, max_width):
+    """Make a rendered text smaller if it is wider than max_width."""
+    if text.get_width() <= max_width:
+        return text
+    scale = max_width / text.get_width()
+    return pygame.transform.smoothscale(text, (max_width, round(text.get_height() * scale)))
+
+
+def draw_toast_title(screen, font, toast):
+    """The toast's name above it. The upside-down toast's name is upside down too."""
+    text = fit(font.render(t(toast), True, config.INK), config.TOAST_TITLE_MAX_WIDTH)
+    if toast == 'upside_down_toast':
+        text = pygame.transform.rotate(text, 180)
+    screen.blit(text, text.get_rect(center=config.TOAST_TITLE_CENTER))
+
+
+def two_lines(text):
+    """Split a name in two lines of about the same length ("PATO SIAMÊS" -> PATO / SIAMÊS)."""
+    words = text.split()
+    if len(words) < 2:
+        return [text]
+    best = min(range(1, len(words)),
+               key=lambda i: abs(len(' '.join(words[:i])) - len(' '.join(words[i:]))))
+    return [' '.join(words[:best]), ' '.join(words[best:])]
+
+
+def draw_shop_titles(screen, font):
+    """The ducks' names above their portraits in the shop."""
+    names = [(duck.name, duck.button_pos[0]) for duck in DUCKS]
+    names.append(('bourgeois_duck', config.BOURGEOIS_BUTTON_POS[0]))
+    for name, center_x in names:
+        # Fonts have letters of different heights: the lines are placed by their capital letters
+        capital = font.render('H', True, config.INK).get_bounding_rect()
+        y = config.SHOP_TITLE_TOP - capital.top
+        for line in two_lines(t(name).upper()):
+            text = fit(font.render(line, True, config.INK), config.SHOP_TITLE_MAX_WIDTH)
+            screen.blit(text, text.get_rect(midtop=(center_x, y)))
+            y += round(capital.height * config.SHOP_TITLE_LINE)
+
+
+def draw_toast(screen, assets, state, effects, title_font=None):
     """The bread slice and the toast's face, flinching when hit: they shake, squash and look hurt.
 
     A beaten toast shrinks away while the next one pops up (see effects.py).
@@ -118,10 +159,10 @@ def draw_toast(screen, assets, state, effects):
         draw_dead_toast(screen, assets, effects.dead_toast, death)
 
     toast, tint = toast_drawing(assets, state.toast, 'hurt' if effects.is_hurt() else None)
-    if toast is not None:
-        # The toast's name (top of its image, above TOAST_TITLE_BOTTOM) stays still
-        title_height = min(max(config.TOAST_TITLE_BOTTOM - toast.pos[1], 0), toast.image.get_height())
-        screen.blit(toast.image, toast.pos, (0, 0, toast.image.get_width(), title_height))
+    # The toast's name is written with the font (the handwritten one, at the top of the
+    # drawing above TOAST_TITLE_BOTTOM, isn't drawn anymore)
+    if title_font is not None:
+        draw_toast_title(screen, title_font, state.toast)
 
     # The bread and the face move together
     body_image, body = toast_body(assets, toast)
@@ -276,7 +317,7 @@ def build_background(assets, layout):
     return background
 
 
-def draw_center(screen, font, assets, state, effects, throws, now):
+def draw_center(screen, font, assets, state, effects, throws, now, title_font=None):
     """The toast, its health, and the ducks around it (and the ones being thrown)."""
     bar_width = state.health * (config.HEALTH_BAR_WIDTH / state.max_health)
     bar = pygame.Rect(*config.HEALTH_BAR_POS, bar_width, config.HEALTH_BAR_HEIGHT)
@@ -286,7 +327,7 @@ def draw_center(screen, font, assets, state, effects, throws, now):
     for name in state.ducks_on_screen:
         if not throws.is_away(name):
             draw_duck(screen, worn_duck(assets, name, state.bumps(name)), effects.duck_scale(name))
-    draw_toast(screen, assets, state, effects)
+    draw_toast(screen, assets, state, effects, title_font)
     if not throws.is_away('starter_duck'):
         draw_duck(screen, worn_duck(assets, 'starter_duck', state.bumps('starter_duck')),
                   effects.duck_scale('starter_duck'))
@@ -350,8 +391,10 @@ def draw_locked(screen, assets, name, button_pos):
                                      round(y + (locked.pos[1] - ref_y) * scale)))
 
 
-def draw_shop(screen, font, small_font, assets, state):
-    """Prices, locked ducks and how many of each duck was bought (bottom)."""
+def draw_shop(screen, font, small_font, assets, state, title_font=None):
+    """Names, prices, locked ducks and how many of each duck was bought (bottom)."""
+    if title_font is not None:
+        draw_shop_titles(screen, title_font)
     for duck in DUCKS:
         write(screen, font, format_number(state.costs[duck.name]), config.BLUE, duck.cost_text_pos)
 
@@ -411,7 +454,9 @@ class Screen:
         self.assets = assets
         self.font = font
         self.small_font = small_font
-        self.title_font = pygame.font.SysFont(None, config.TITLE_FONT_SIZE)
+        self.title_font = load_font(config.TITLE_FONT_SIZE)
+        self.toast_title_font = load_font(config.TOAST_TITLE_SIZE)
+        self.shop_title_font = load_font(config.SHOP_TITLE_SIZE)
         self.background = None
         self.background_size = None
         self.canvas = None
@@ -431,10 +476,10 @@ class Screen:
                 for group, offset in layout.offsets.items()}
 
         assets.map_parts().stats_panel.draw(part['top_left'])
-        draw_center(part['center'], font, assets, state, effects, throws, now)
+        draw_center(part['center'], font, assets, state, effects, throws, now, self.toast_title_font)
         draw_stats(part['top_left'], font, state, effects)
         draw_level_buttons(part['top_right'], font, assets, state)
-        draw_shop(part['bottom'], font, self.small_font, assets, state)
+        draw_shop(part['bottom'], font, self.small_font, assets, state, self.shop_title_font)
         effects.draw(canvas, font, assets.coin, offset=layout.offsets['center'],
                      coin_target=config.DUCKCOINS_ICON_POS)
         if overlay:

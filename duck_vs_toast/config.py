@@ -8,6 +8,7 @@ import os
 GAME_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMAGES_DIR = os.path.join(GAME_DIR, 'assets', 'images')
 SOUNDS_DIR = os.path.join(GAME_DIR, 'assets', 'sounds')
+FONTS_DIR = os.path.join(GAME_DIR, 'assets', 'fonts')
 POSITIONS_FILE = os.path.join(IMAGES_DIR, 'positions.json')  # where each cropped image goes
 
 # --- Screen ---
@@ -16,6 +17,27 @@ SCREEN_HEIGHT = 720
 SCREEN_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)  # the size the art is drawn at
 FONT_SIZE = 48
 SMALL_FONT_SIZE = 28  # purchase counters and tooltips
+
+# --- Text font ---
+# Every text in the game is written with this font (in assets/fonts; all are free to use,
+# see the -OFL.txt file next to each). To compare them: python -m tools.preview_fonts
+FONTS = {
+    'patrick_hand': 'PatrickHand-Regular.ttf',
+    'itim': 'Itim-Regular.ttf',
+    'indie_flower': 'IndieFlower-Regular.ttf',
+    'mali': 'Mali-Bold.ttf',
+    'short_stack': 'ShortStack-Regular.ttf',
+}
+TEXT_FONT = 'patrick_hand'
+INK = (66, 66, 72)               # dark gray, like the pencil of the drawings
+TOAST_TITLE_CENTER = (640, 52)   # the toast's name, above it
+TOAST_TITLE_SIZE = 56
+TOAST_TITLE_MAX_WIDTH = 400     # longer names are made smaller (the ducks are beside it)
+SHOP_TITLE_TOP = 503             # the ducks' names in the shop, above their portraits...
+SHOP_TITLE_SIZE = 32
+SHOP_TITLE_LINE = 1.4            # from one line of a name to the next, in capital letters' heights
+SHOP_TITLE_MAX_WIDTH = 200
+SHOP_TITLE_AREA = (497, 568)     # ...where the old handwritten names are erased from the map
 FPS = 30  # frame rate limit
 
 # --- Resizable window (see layout.py) ---
@@ -100,7 +122,7 @@ HURT_TINT = (255, 205, 205)    # reddish tint used while a toast has no "_hurt" 
 HIT_STRENGTH = {'click': 1.0, 'auto': 0.6, 'dps': 0.4, 'throw': 1.5}
 AUTO_CLICK_TIP = (738, 355)    # tip of the muscular duck's pointer: its damage numbers pop up here
 REWARD_BADGE_RECT = (495, 430, 115, 60)  # the "+ coin" under the toast, drawn in front of it
-TOAST_TITLE_BOTTOM = 95        # the toast images have their name above this line; it doesn't squish
+TOAST_TITLE_BOTTOM = 130       # the toast images have their name above this line; it doesn't squish
 DEATH_DURATION = 220           # a beaten toast shrinks away this fast
 DEATH_TINT = (165, 165, 175)   # grayish tint used while a toast has no "_dead" drawing yet
 SPAWN_DELAY = 180              # the next toast pops up this long after the old one starts shrinking

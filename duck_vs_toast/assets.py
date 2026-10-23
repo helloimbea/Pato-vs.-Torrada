@@ -70,6 +70,66 @@ def load_folder(category, positions):
     return sprites
 
 
+class GameFont(pygame.font.Font):
+    """A font that also knows how far to move its texts down (nudge) to sit like the default font."""
+    nudge = 0
+
+
+def digit_box(font):
+    return font.render('0', True, (0, 0, 0)).get_bounding_rect()
+
+
+def load_font(size, name=None):
+    """The game's text font (config.TEXT_FONT) at about the same size as Pygame's default font.
+
+    Fonts draw letters of different sizes and heights, so the size is adjusted until a digit
+    is as tall as in the default font, and texts are moved to sit at the same height;
+    changing fonts then keeps texts in their boxes.
+    """
+    file_name = config.FONTS.get(name or config.TEXT_FONT)
+    path = os.path.join(config.FONTS_DIR, file_name) if file_name else None
+    if path is None or not os.path.exists(path):
+        return pygame.font.SysFont(None, size)
+    default = digit_box(pygame.font.SysFont(None, size))
+    height = max(digit_box(GameFont(path, size)).height, 1)
+    font = GameFont(path, max(1, round(size * default.height / height)))
+    font.nudge = default.top - digit_box(font).top
+    return font
+
+
+def is_ink(color):
+    """The dark gray pencil of the handwritten texts (not the colorful drawings)."""
+    brightest, darkest = max(color.r, color.g, color.b), min(color.r, color.g, color.b)
+    return brightest < 150 and brightest - darkest < 40
+
+
+def erase_shop_titles(game_map):
+    """Erase the ducks' handwritten names from the shop; the game writes them with the font now.
+
+    The pencil strokes (and their soft edges) are painted over with the panel's color.
+    """
+    top, bottom = config.SHOP_TITLE_AREA
+    area = pygame.Rect(0, top, config.SCREEN_WIDTH, bottom - top)
+    pencil = pygame.mask.Mask(area.size)
+    for x in range(area.left, area.right):
+        for y in range(area.top, area.bottom):
+            if is_ink(game_map.get_at((x, y))):
+                pencil.set_at((x, y - area.top))
+    grown = pygame.mask.Mask(area.size)  # a little bigger, for the soft edges
+    for dx in range(-2, 3):
+        for dy in range(-2, 3):
+            grown.draw(pencil, (dx, dy))
+    erased = game_map.copy()
+    for y in range(area.top, area.bottom):
+        paper = None
+        for x in range(area.left, area.right):
+            if not grown.get_at((x, y - area.top)):
+                paper = game_map.get_at((x, y))  # the last panel color seen on this row
+            elif paper is not None:
+                erased.set_at((x, y), paper)
+    return erased
+
+
 def cut_coin(game_map):
     """Copy the Duckcoin drawn on the map (top left), for the flying-coin animation."""
     radius = config.DUCKCOINS_ICON_RADIUS
@@ -265,6 +325,7 @@ class Assets:
     def split(self, game_map):
         if not self.bread_drawn:
             game_map, _ = split_bread(game_map)
+        game_map = erase_shop_titles(game_map)
         game_map, stats_panel = cut_stats_panel(game_map)
         background, shop, floor_row = split_map(game_map, self.reward_badge)
         return MapParts(background, shop, floor_row, stats_panel)

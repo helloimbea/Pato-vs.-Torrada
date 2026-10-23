@@ -27,14 +27,16 @@ Tip: mark how much you like an idea with ⭐ (nice to have) up to ⭐⭐⭐ (rea
 ## 🎮 Gameplay
 
 - Duckoins economy: Players can buy a variety of other items, like potions, hats, decorations, other animals etc. ⭐⭐
+- O jogador começa na ilha inicial e vai comprando novas ilhas (muda o fundo do mapa) que tem bônus e patos especiais. Cada ilha tem 10 torradas exclusivas. ⭐⭐
 
 ## 🎨 Art and sound
 
--
+- OS textos não vão mais ser escritos à mão. Vamos usar uma fonte que tenha estilo de handrawing, fofa que combine com o jogo.Assim podemos traduzir e criar novos textos facilmente. ⭐⭐⭐
 
 ## 🌍 Other
 
 - Language switch en/pt-br/es ⭐⭐⭐
+- Verificar as traduções dos nomes dos patos torradas caso tenham trocadilhos que não funcionam em outro idioma.
 
 ---
 

@@ -4,7 +4,7 @@ import sys
 import pygame
 
 from . import config, save, shop
-from .assets import Assets
+from .assets import Assets, load_font
 from .clock import GameClock
 from .effects import Effects
 from .i18n import t
@@ -110,8 +110,8 @@ def main():
         print('No audio device found, playing without sound.')
 
     assets = Assets()
-    font = pygame.font.SysFont(None, config.FONT_SIZE)
-    small_font = pygame.font.SysFont(None, config.SMALL_FONT_SIZE)
+    font = load_font(config.FONT_SIZE)
+    small_font = load_font(config.SMALL_FONT_SIZE)
     screen = Screen(assets, font, small_font)
     layout = Layout(window.get_size())
     toast_rect = pygame.Rect(config.TOAST_RECT)
