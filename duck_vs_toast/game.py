@@ -4,15 +4,15 @@ import sys
 import pygame
 
 from . import config, save, shop
-from .assets import Assets, load_font
+from .assets import Assets, load_font, localized
 from .clock import GameClock
 from .effects import Effects
 from .i18n import t
 from .layout import Layout
 from .numbers import format_number
-from .screen import Screen, duck_sprites
+from .screen import Screen
+from .smacking import Smacking
 from .state import GameState
-from .throwing import Throws
 
 
 def clicked_circle(mouse_pos, center, radius):
@@ -65,20 +65,6 @@ def play_quack(assets, state):
         assets.click_sound.play()
 
 
-def press_duck(name, state, effects, throws, point, sprites):
-    """The left button was pressed on a duck: pick it up, or heal it if it is battered.
-
-    Returns True if it was healed (for the quack).
-    """
-    if not state.is_battered(name):
-        throws.grab(name, point, sprites[name])
-        return False
-    if state.heal_duck(name):
-        effects.duck_bought(name, False)  # a happy wobble
-        return True
-    return False
-
-
 def overlay_lines(screen_name, away=0, earned=0):
     """The text of the start ('start'), pause ('paused') or victory ('victory') screen."""
     if screen_name == 'paused':
@@ -128,15 +114,15 @@ def main():
     overlay = 'start'  # 'start', 'paused', 'victory' or None while playing
 
     effects = Effects(clock=game_clock)
-    throws = Throws(clock=game_clock)
+    smacking = Smacking(clock=game_clock)
 
     def hit_position(kind):
-        """Clicks pop their damage number where the mouse is, thrown ducks where they hit;
+        """Clicks pop their damage number where the mouse is, smacks where the duck hit;
         automatic hits pop on the toast."""
         if kind == 'click':
             return layout.to_group('center', pygame.mouse.get_pos())
-        if kind == 'throw':
-            return throws.impact
+        if kind.startswith('smack'):
+            return smacking.impact
         return None
 
     state.on_hit = lambda amount, kind: effects.hit(amount, kind, hit_position(kind))
@@ -167,21 +153,21 @@ def main():
                     game_clock.resume()
             elif escape:
                 overlay = 'paused'
-                throws.drop()
+                smacking.release()
                 game_clock.pause()
             elif clicked:
-                # A press on a duck picks it up (see throwing.py); anywhere else is a normal click
+                # A press on the muscular duck picks it up (a secret, see smacking.py)
                 in_center = layout.to_group('center', event.pos)
-                sprites = duck_sprites(assets, state)
-                name = throws.duck_at(in_center, sprites)
-                if name is None:
+                muscular = localized(assets.ducks, 'muscular_duck')
+                if smacking.can_grab(state, in_center, muscular):
+                    smacking.grab(in_center, muscular)
+                else:
                     handle_click(event, state, assets, toast_rect, layout)
-                elif press_duck(name, state, effects, throws, in_center, sprites):
+            elif event.type == pygame.MOUSEMOTION and smacking.held:
+                if smacking.move(layout.to_group('center', event.pos), state):
                     play_quack(assets, state)
-            elif event.type == pygame.MOUSEMOTION and throws.held:
-                throws.move(layout.to_group('center', event.pos))
-            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1 and throws.held:
-                throws.release(layout.to_group('center', event.pos))
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1 and smacking.held:
+                smacking.release()
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
                 state.toggle_mute()
@@ -205,10 +191,9 @@ def main():
             layout = Layout(window.get_size())
         now = game_clock()
         state.update(now)
-        if throws.update(state, duck_sprites(assets, state)):
-            play_quack(assets, state)
+        smacking.update(localized(assets.ducks, 'muscular_duck'))
         effects.update(state.duckcoins)
         lines = overlay_lines(overlay, away or 0, earned) if overlay else None
-        screen.draw(window, layout, state, effects, throws, now, pygame.mouse.get_pos(), lines)
+        screen.draw(window, layout, state, effects, smacking, now, pygame.mouse.get_pos(), lines)
         pygame.display.update()
         clock.tick(config.FPS)

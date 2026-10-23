@@ -219,8 +219,6 @@ The tests also run automatically on GitHub (in the **Actions** tab) every time c
 | Mute / unmute the quack | M (or the speaker button, top right) |
 | Go back / forward a level | `<` and `>` buttons next to the level (forward only to levels already beaten) |
 | See what a duck does | Hover the mouse over it in the shop |
-| Throw a duck at the toast (extra damage) | Drag a duck on screen and let go |
-| Heal a battered duck (after 5 throws) | Click it (costs about one toast's Duckcoins) |
 | Cheat: +1 T Duckcoins (only with `DEV_MODE = True` in `duck_vs_toast/config.py`) | P |
 
 ---

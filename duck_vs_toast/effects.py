@@ -55,7 +55,7 @@ class Effects:
     # --- Things that happened in the game ---
 
     def hit(self, amount, kind, position=None):
-        """A toast was hit. kind is 'click', 'auto' (muscular duck), 'dps' or 'throw'.
+        """A toast was hit. kind is 'click', 'auto' (muscular duck), 'dps', 'smack' or 'smack_crit'.
 
         Automatic hits make the toast react like a click, only more gently.
         """
@@ -68,9 +68,10 @@ class Effects:
                         y + self.random.uniform(0.15, 0.6) * height)
         else:  # a little sideways jitter, so fast hits don't pile up in one spot
             position = (position[0] + self.random.uniform(-15, 15), position[1])
-        color = config.TIMER_BLUE if kind == 'dps' else config.RED
+        color = {'dps': config.TIMER_BLUE, 'smack_crit': config.CRIT_COLOR}.get(kind, config.RED)
+        text = format_number(amount) + ('!' if kind == 'smack_crit' else '')
         self.damage_numbers.append(
-            DamageNumber(format_number(amount), color, position[0], position[1], now))
+            DamageNumber(text, color, position[0], position[1], now))
         # Many hits per second would fill the screen, so only the newest ones stay
         del self.damage_numbers[:-config.MAX_DAMAGE_NUMBERS]
         # A gentle hit doesn't cut short a stronger reaction that is still going on

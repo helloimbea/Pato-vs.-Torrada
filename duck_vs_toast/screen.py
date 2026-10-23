@@ -196,75 +196,33 @@ def draw_duck(screen, sprite, scale):
     screen.blit(image, image.get_rect(midbottom=sprite.rect.midbottom))
 
 
-def duck_sprites(assets, state):
-    """{duck name: Sprite} for every duck on screen, in drawing order (the starter duck on top)."""
-    names = state.ducks_on_screen + ['starter_duck']
-    return {name: localized(assets.ducks, name) for name in names}
+_resting_images = {}  # the muscular duck's resting look, made when first needed
 
 
-_worn_ducks = {}  # tinted / bandaged duck drawings, made when first needed
-
-
-def worn_duck(assets, name, bumps):
-    """A duck's drawing after bumps hits: grayer with each hit, with a bandage once battered.
-
-    A battered duck uses "<duck>_battered.png" when it exists in assets/images/ducks;
-    until it is drawn, the duck turns gray and gets a bandage drawn by code.
-    """
-    sprite = localized(assets.ducks, name)
-    if bumps <= 0:
-        return sprite
-    battered = bumps >= config.DUCK_MAX_BUMPS
-    if battered and localized(assets.ducks, name + '_battered') is not None:
-        return localized(assets.ducks, name + '_battered')
-    key = (id(sprite.image), bumps)
-    if key not in _worn_ducks:
-        share = bumps / config.DUCK_MAX_BUMPS
-        tint = tuple(round(255 + (gray - 255) * share) for gray in config.BATTERED_TINT)
+def resting_duck(sprite):
+    """The muscular duck while it rests: grayish and see-through."""
+    key = id(sprite.image)
+    if key not in _resting_images:
         image = sprite.image.copy()
-        image.fill(tint + (255,), special_flags=pygame.BLEND_RGBA_MULT)
-        if battered:
-            draw_bandage(image)
-        _worn_ducks[key] = Sprite(image, sprite.pos)
-    return _worn_ducks[key]
+        image.fill(config.RESTING_TINT + (config.RESTING_ALPHA,), special_flags=pygame.BLEND_RGBA_MULT)
+        _resting_images[key] = Sprite(image, sprite.pos)
+    return _resting_images[key]
 
 
-def draw_bandage(image):
-    """A crossed bandage on the top of a duck's drawing (a placeholder until it is drawn)."""
-    area = image.get_bounding_rect()
-    length = max(area.width // 3, 12)
-    thickness = max(length // 3, 5)
-    strip = pygame.Surface((length, thickness), pygame.SRCALPHA)
-    pygame.draw.rect(strip, config.BANDAGE_COLOR, strip.get_rect(), border_radius=thickness // 2)
-    pygame.draw.rect(strip, config.DARK_BLUE, strip.get_rect(), width=1, border_radius=thickness // 2)
-    center = (area.centerx, area.top + area.height // 4)
-    for angle in (35, -35):
-        turned = pygame.transform.rotate(strip, angle)
-        image.blit(turned, turned.get_rect(center=center))
-
-
-def draw_moving_duck(screen, sprite, duck, held):
-    """A duck that is held, flying or going back home (see throwing.py)."""
-    image = sprite.image
-    lift = config.HELD_LIFT if held else 1
-    if duck.angle or lift != 1:
-        image = pygame.transform.rotozoom(image, duck.angle, lift)
-    screen.blit(image, image.get_rect(center=duck.center))
-
-
-def scene_duck_lines(state, name):
-    """The tooltip of a duck on screen: its name and what can be done with it."""
-    lines = [(t(name), config.DARK_BLUE)]
-    if state.is_battered(name):
-        cost = state.heal_cost()
-        lines.append((t('battered'), config.RED))
-        lines.append((t('heal_for', cost=format_number(cost)),
-                      config.BLUE if state.duckcoins >= cost else config.RED))
+def draw_muscular_duck(screen, font, sprite, state, smacking, scale):
+    """The muscular duck: at its spot, held (or hopping back), or resting with a timer above it."""
+    if smacking.is_away():
+        image = sprite.image
+        lift = config.HELD_LIFT if smacking.held else 1
+        if smacking.angle or lift != 1:
+            image = pygame.transform.rotozoom(image, smacking.angle, lift)
+        screen.blit(image, image.get_rect(center=smacking.center))
+    elif state.is_muscular_resting():
+        resting_duck(sprite).draw(screen)
+        text = outlined(font, shop.format_time(state.muscular_rest_left()), config.DARK_BLUE)
+        screen.blit(text, text.get_rect(midbottom=(sprite.rect.centerx, sprite.rect.top + 8)))
     else:
-        lines.append((t('throw_hint'), config.BLUE))
-        left = config.DUCK_MAX_BUMPS - state.bumps(name)
-        lines.append((t('throws_left', count=left, total=config.DUCK_MAX_BUMPS), config.BLUE))
-    return lines
+        draw_duck(screen, sprite, scale)
 
 
 def stretch(image, width, left, right):
@@ -317,35 +275,37 @@ def build_background(assets, layout):
     return background
 
 
-def draw_center(screen, font, assets, state, effects, throws, now, title_font=None):
-    """The toast, its health, and the ducks around it (and the ones being thrown)."""
+def draw_center(screen, font, assets, state, effects, smacking, now, title_font=None):
+    """The toast, its health, and the ducks around it."""
     bar_width = state.health * (config.HEALTH_BAR_WIDTH / state.max_health)
     bar = pygame.Rect(*config.HEALTH_BAR_POS, bar_width, config.HEALTH_BAR_HEIGHT)
     pygame.draw.rect(screen, config.RED, bar)
 
-    # Bought ducks, toast and starter duck (the ones being thrown are drawn last, on top)
+    # Bought ducks, toast and starter duck (the muscular duck is drawn last when held, on top)
     for name in state.ducks_on_screen:
-        if not throws.is_away(name):
-            draw_duck(screen, worn_duck(assets, name, state.bumps(name)), effects.duck_scale(name))
+        if name == 'muscular_duck' and smacking.is_away():
+            continue
+        if name == 'muscular_duck':
+            draw_muscular_duck(screen, font, localized(assets.ducks, name), state, smacking,
+                               effects.duck_scale(name))
+        else:
+            draw_duck(screen, localized(assets.ducks, name), effects.duck_scale(name))
     draw_toast(screen, assets, state, effects, title_font)
-    if not throws.is_away('starter_duck'):
-        draw_duck(screen, worn_duck(assets, 'starter_duck', state.bumps('starter_duck')),
-                  effects.duck_scale('starter_duck'))
+    localized(assets.ducks, 'starter_duck').draw(screen)
 
     write(screen, font, format_number(round(state.health)), config.RED, config.HEALTH_TEXT_POS)
     reward_color = config.BOOST_COLOR if state.is_boosted() else config.GREEN
     write(screen, font, format_number(state.current_reward()), reward_color, config.REWARD_TEXT_POS)
 
-    if state.has_auto_click:
+    if state.has_auto_click and not state.is_muscular_resting():
         localized(assets.ui, 'auto_click_pointer').draw(screen)
 
     if state.is_boss():
         write(screen, font, f' {state.boss_time_left(now)}', config.TIMER_BLUE, config.BOSS_TIMER_TEXT_POS)
         localized(assets.ui, 'boss_timer_box').draw(screen)
 
-    for name, duck in throws.moving.items():
-        sprite = worn_duck(assets, name, state.bumps(name))
-        draw_moving_duck(screen, sprite, duck, held=name == throws.held)
+    if smacking.is_away():
+        draw_muscular_duck(screen, font, localized(assets.ducks, 'muscular_duck'), state, smacking, (1, 1))
 
 
 def draw_stats(screen, font, state, effects):
@@ -461,7 +421,7 @@ class Screen:
         self.background_size = None
         self.canvas = None
 
-    def draw(self, window, layout, state, effects, throws, now, mouse_pos, overlay=None):
+    def draw(self, window, layout, state, effects, smacking, now, mouse_pos, overlay=None):
         """overlay: the lines of a start/pause/victory screen to show over the game, or None."""
         assets, font = self.assets, self.font
         if self.background_size != (layout.size, i18n.language):  # resized, or language changed
@@ -476,7 +436,7 @@ class Screen:
                 for group, offset in layout.offsets.items()}
 
         assets.map_parts().stats_panel.draw(part['top_left'])
-        draw_center(part['center'], font, assets, state, effects, throws, now, self.toast_title_font)
+        draw_center(part['center'], font, assets, state, effects, smacking, now, self.toast_title_font)
         draw_stats(part['top_left'], font, state, effects)
         draw_level_buttons(part['top_right'], font, assets, state)
         draw_shop(part['bottom'], font, self.small_font, assets, state, self.shop_title_font)
@@ -487,13 +447,6 @@ class Screen:
         else:
             draw_tooltip(canvas, self.small_font, state, layout.to_group('bottom', mouse_pos),
                          layout.offsets['bottom'])
-            # Hovering a duck on screen (not while holding one) tells what it can do
-            in_center = layout.to_group('center', mouse_pos)
-            name = None if throws.held else throws.duck_at(in_center, duck_sprites(assets, state))
-            if name is not None:
-                offset_x, offset_y = layout.offsets['center']
-                draw_box(canvas, self.small_font, scene_duck_lines(state, name),
-                         offset_x + in_center[0], offset_y + in_center[1] - 25)
 
         if canvas is not window:
             pygame.transform.smoothscale(canvas, window.get_size(), window)

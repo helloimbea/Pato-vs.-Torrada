@@ -37,7 +37,6 @@ TEXTS = {
         'bourgeois_active': 'Active! {time} left.',
         'bourgeois_recharging': 'Recharging: ready in {time}.',
         'bourgeois_recharge_info': 'Recharges for {minutes} min after buying.',
-        'starter_duck': 'Starter Duck',
         'nerd_toast': 'Nerd Toast',
         'happy_toast': 'Happy Toast',
         'upside_down_toast': 'Toast',  # written upside down
@@ -49,10 +48,6 @@ TEXTS = {
         'tiny_toast': 'Tiny Toast',
         'hat_toast': 'Toast with a Hat',
         'what_are_you_doing_toast': 'What are you doing?',
-        'throw_hint': 'Drag me and throw me at the toast!',
-        'throws_left': 'Throws left: {count}/{total}',
-        'battered': 'All battered up!',
-        'heal_for': 'Click to heal: {cost} Duckcoins',
     },
     'pt': {
         'title': 'Pato vs. Torrada',
@@ -78,7 +73,6 @@ TEXTS = {
         'bourgeois_active': 'Ativo! Faltam {time}.',
         'bourgeois_recharging': 'Recarregando: pronto em {time}.',
         'bourgeois_recharge_info': 'Recarrega por {minutes} min depois de comprar.',
-        'starter_duck': 'Pato Inicial',
         'nerd_toast': 'Torrada nerd',
         'happy_toast': 'Torrada feliz',
         'upside_down_toast': 'Torrada',  # escrito de cabeça para baixo
@@ -90,10 +84,6 @@ TEXTS = {
         'tiny_toast': 'Torradinha',
         'hat_toast': 'Torrada de chapéu',
         'what_are_you_doing_toast': 'O que você está fazendo?',
-        'throw_hint': 'Me arraste e me jogue na torrada!',
-        'throws_left': 'Arremessos restantes: {count}/{total}',
-        'battered': 'Todo amassado!',
-        'heal_for': 'Clique para curar: {cost} Duckcoins',
     },
 }
 
