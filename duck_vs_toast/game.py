@@ -65,6 +65,17 @@ def play_quack(assets, state):
         assets.click_sound.play()
 
 
+def set_cursor(assets, grabbing):
+    """A grabbing hand while holding the muscular duck, the normal arrow otherwise."""
+    try:
+        if grabbing:
+            pygame.mouse.set_cursor(pygame.cursors.Cursor(config.GRAB_CURSOR_HOTSPOT, assets.grab_cursor))
+        else:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+    except pygame.error:  # some systems can't change the cursor: keep the normal one
+        pass
+
+
 def overlay_lines(screen_name, away=0, earned=0):
     """The text of the start ('start'), pause ('paused') or victory ('victory') screen."""
     if screen_name == 'paused':
@@ -129,6 +140,7 @@ def main():
     state.on_defeat = lambda: effects.defeat(state.toast)  # still the beaten toast here
     state.on_buy = effects.duck_bought
     mouse_button_down = False
+    grabbing = False  # the cursor is a grabbing hand
     last_save = pygame.time.get_ticks()
     clock = pygame.time.Clock()
 
@@ -192,6 +204,9 @@ def main():
         now = game_clock()
         state.update(now)
         smacking.update(localized(assets.ducks, 'muscular_duck'))
+        if smacking.held != grabbing:
+            grabbing = smacking.held
+            set_cursor(assets, grabbing)
         effects.update(state.duckcoins)
         lines = overlay_lines(overlay, away or 0, earned) if overlay else None
         screen.draw(window, layout, state, effects, smacking, now, pygame.mouse.get_pos(), lines)

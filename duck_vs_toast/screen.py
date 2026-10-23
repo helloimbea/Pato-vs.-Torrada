@@ -442,6 +442,9 @@ class Screen:
         draw_shop(part['bottom'], font, self.small_font, assets, state, self.shop_title_font)
         effects.draw(canvas, font, assets.coin, offset=layout.offsets['center'],
                      coin_target=config.DUCKCOINS_ICON_POS)
+        shake = effects.screen_offset()
+        if shake != (0, 0):  # the whole screen shakes (the edges repeat for those few pixels)
+            canvas.scroll(*shake)
         if overlay:
             draw_overlay(canvas, self.title_font, font, overlay)
         else:

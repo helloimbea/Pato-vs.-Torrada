@@ -130,6 +130,27 @@ def erase_shop_titles(game_map):
     return erased
 
 
+def make_grab_cursor():
+    """A closed hand, grabbing: the mouse cursor while holding the muscular duck.
+
+    It is a placeholder drawn by code; a drawing in assets/images/cursors/grab.png
+    (about 32x32 pixels) is used instead when it exists.
+    """
+    if os.path.exists(config.GRAB_CURSOR_FILE):
+        return pygame.image.load(config.GRAB_CURSOR_FILE).convert_alpha()
+    hand = pygame.Surface((32, 32), pygame.SRCALPHA)
+    outline, glove = (40, 40, 48), (255, 255, 255)
+    for color, grow in ((outline, 2), (glove, 0)):
+        pygame.draw.rect(hand, color, pygame.Rect(6, 12, 21, 15).inflate(grow * 2, grow * 2),
+                         border_radius=7)
+        for x in (10, 15, 20, 25):  # the four bent fingers (knuckles on top)
+            pygame.draw.circle(hand, color, (x, 12), 4 + grow)
+        pygame.draw.ellipse(hand, color, pygame.Rect(3, 17, 10, 8).inflate(grow * 2, grow * 2))  # thumb
+    for x in (12, 17, 22):  # lines between the fingers
+        pygame.draw.line(hand, outline, (x + 0.5, 10), (x + 0.5, 16))
+    return hand
+
+
 def cut_coin(game_map):
     """Copy the Duckcoin drawn on the map (top left), for the flying-coin animation."""
     radius = config.DUCKCOINS_ICON_RADIUS
@@ -313,6 +334,7 @@ class Assets:
         self.reward_badge = cut_reward_badge(game_map)
         self.coin = cut_coin(game_map)
         self.maps = {'pt': self.split(game_map)}  # one per language, made when first needed
+        self.grab_cursor = make_grab_cursor()
         self.click_sound = None  # stays None when there is no audio device (e.g. Codespaces)
         if pygame.mixer.get_init():
             self.click_sound = pygame.mixer.Sound(os.path.join(config.SOUNDS_DIR, 'quack.wav'))

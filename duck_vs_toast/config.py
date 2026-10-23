@@ -173,6 +173,10 @@ RETURN_ARC = 60                # how high it hops on the way back
 RESTING_TINT = (170, 170, 180)  # a resting duck is grayish...
 RESTING_ALPHA = 140            # ...and see-through (0 = invisible, 255 = solid)
 CRIT_COLOR = (240, 170, 50)    # critical hit numbers
+SCREEN_SHAKE = {'smack': 7, 'smack_crit': 16}  # how many pixels the whole screen shakes
+SCREEN_SHAKE_DURATION = 280
+GRAB_CURSOR_FILE = os.path.join(IMAGES_DIR, 'cursors', 'grab.png')  # optional drawing
+GRAB_CURSOR_HOTSPOT = (16, 16)  # the spot of the cursor that points (from its top-left corner)
 
 # --- Saving and offline earnings ---
 SAVE_FILE = os.path.join(os.path.expanduser('~'), '.duck_vs_toast', 'save.json')

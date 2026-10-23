@@ -194,3 +194,37 @@ def test_letting_go_sends_the_duck_home():
     clock.now += config.RETURN_TIME
     smacking.update(sprite)
     assert not smacking.is_away()
+
+
+# --- How it feels (effects) ---
+
+def test_a_smack_shakes_the_whole_screen_and_a_critical_one_harder():
+    from duck_vs_toast.effects import Effects
+
+    clock = FakeClock()
+    effects = Effects(clock=clock)
+    assert effects.screen_offset() == (0, 0)
+    effects.hit(10, 'click', (600, 300))
+    assert effects.screen_offset() == (0, 0)  # clicks don't shake the screen
+
+    biggest = {}
+    for kind in ('smack', 'smack_crit'):
+        effects.hit(10, kind, (600, 300))
+        start = clock.now
+        biggest[kind] = 0
+        while clock.now < start + config.SCREEN_SHAKE_DURATION:
+            dx, dy = effects.screen_offset()
+            biggest[kind] = max(biggest[kind], abs(dx), abs(dy))
+            clock.now += 10
+        assert effects.screen_offset() == (0, 0)
+    assert 0 < biggest['smack'] < biggest['smack_crit']
+
+
+def test_the_grabbing_hand_cursor_is_drawn():
+    from duck_vs_toast.assets import make_grab_cursor
+
+    pygame.display.init()
+    pygame.display.set_mode((1, 1))
+    cursor = make_grab_cursor()
+    assert cursor.get_size() == (32, 32)
+    assert cursor.get_at(config.GRAB_CURSOR_HOTSPOT).a > 0
