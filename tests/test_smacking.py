@@ -220,11 +220,17 @@ def test_a_smack_shakes_the_whole_screen_and_a_critical_one_harder():
     assert 0 < biggest['smack'] < biggest['smack_crit']
 
 
-def test_the_grabbing_hand_cursor_is_drawn():
-    from duck_vs_toast.assets import make_grab_cursor
+def test_the_owners_cursors_are_loaded_small_and_click_with_the_fingertip():
+    from duck_vs_toast.assets import load_cursor
 
     pygame.display.init()
     pygame.display.set_mode((1, 1))
-    cursor = make_grab_cursor()
-    assert cursor.get_size() == (32, 32)
-    assert cursor.get_at(config.GRAB_CURSOR_HOTSPOT).a > 0
+    for name in ('pointer', 'grab'):
+        cursor = load_cursor(name)
+        assert cursor is not None, name
+        image = cursor.data[1]
+        assert max(image.get_size()) == config.CURSOR_SIZE
+    pointer = load_cursor('pointer')
+    hotspot, image = pointer.data
+    assert hotspot[1] == 0  # the fingertip is the highest point of the drawing
+    assert image.get_at(hotspot).a > 128

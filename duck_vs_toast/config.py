@@ -9,6 +9,8 @@ GAME_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMAGES_DIR = os.path.join(GAME_DIR, 'assets', 'images')
 SOUNDS_DIR = os.path.join(GAME_DIR, 'assets', 'sounds')
 FONTS_DIR = os.path.join(GAME_DIR, 'assets', 'fonts')
+CURSORS_DIR = os.path.join(IMAGES_DIR, 'cursors')  # pointer.png (always) and grab.png (holding a duck)
+CURSOR_SIZE = 44  # the cursor drawings are made this big (their longest side, in pixels)
 POSITIONS_FILE = os.path.join(IMAGES_DIR, 'positions.json')  # where each cropped image goes
 
 # --- Screen ---
@@ -122,7 +124,6 @@ HURT_TINT = (255, 205, 205)    # reddish tint used while a toast has no "_hurt" 
 HIT_STRENGTH = {'click': 1.0, 'auto': 0.6, 'dps': 0.4, 'smack': 1.5, 'smack_crit': 2.0}
 AUTO_CLICK_TIP = (738, 355)    # tip of the muscular duck's pointer: its damage numbers pop up here
 REWARD_BADGE_RECT = (495, 430, 115, 60)  # the "+ coin" under the toast, drawn in front of it
-TOAST_TITLE_BOTTOM = 130       # the toast images have their name above this line; it doesn't squish
 DEATH_DURATION = 220           # a beaten toast shrinks away this fast
 DEATH_TINT = (165, 165, 175)   # grayish tint used while a toast has no "_dead" drawing yet
 SPAWN_DELAY = 180              # the next toast pops up this long after the old one starts shrinking
@@ -175,8 +176,6 @@ RESTING_ALPHA = 140            # ...and see-through (0 = invisible, 255 = solid)
 CRIT_COLOR = (240, 170, 50)    # critical hit numbers
 SCREEN_SHAKE = {'smack': 7, 'smack_crit': 16}  # how many pixels the whole screen shakes
 SCREEN_SHAKE_DURATION = 280
-GRAB_CURSOR_FILE = os.path.join(IMAGES_DIR, 'cursors', 'grab.png')  # optional drawing
-GRAB_CURSOR_HOTSPOT = (16, 16)  # the spot of the cursor that points (from its top-left corner)
 
 # --- Saving and offline earnings ---
 SAVE_FILE = os.path.join(os.path.expanduser('~'), '.duck_vs_toast', 'save.json')

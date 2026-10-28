@@ -130,25 +130,29 @@ def erase_shop_titles(game_map):
     return erased
 
 
-def make_grab_cursor():
-    """A closed hand, grabbing: the mouse cursor while holding the muscular duck.
+def load_cursor(name):
+    """A mouse cursor drawn by the owner (assets/images/cursors/<name>.png), or None if missing.
 
-    It is a placeholder drawn by code; a drawing in assets/images/cursors/grab.png
-    (about 32x32 pixels) is used instead when it exists.
+    The drawing is cropped and made CURSOR_SIZE big. The spot that clicks is the tip of the
+    pointing finger for 'pointer' (the drawing's highest point) and the middle for 'grab'.
     """
-    if os.path.exists(config.GRAB_CURSOR_FILE):
-        return pygame.image.load(config.GRAB_CURSOR_FILE).convert_alpha()
-    hand = pygame.Surface((32, 32), pygame.SRCALPHA)
-    outline, glove = (40, 40, 48), (255, 255, 255)
-    for color, grow in ((outline, 2), (glove, 0)):
-        pygame.draw.rect(hand, color, pygame.Rect(6, 12, 21, 15).inflate(grow * 2, grow * 2),
-                         border_radius=7)
-        for x in (10, 15, 20, 25):  # the four bent fingers (knuckles on top)
-            pygame.draw.circle(hand, color, (x, 12), 4 + grow)
-        pygame.draw.ellipse(hand, color, pygame.Rect(3, 17, 10, 8).inflate(grow * 2, grow * 2))  # thumb
-    for x in (12, 17, 22):  # lines between the fingers
-        pygame.draw.line(hand, outline, (x + 0.5, 10), (x + 0.5, 16))
-    return hand
+    path = os.path.join(config.CURSORS_DIR, name + '.png')
+    if not os.path.exists(path):
+        return None
+    image = pygame.image.load(path).convert_alpha()
+    image = image.subsurface(image.get_bounding_rect()).copy()
+    scale = config.CURSOR_SIZE / max(image.get_size())
+    image = pygame.transform.smoothscale(
+        image, (max(1, round(image.get_width() * scale)), max(1, round(image.get_height() * scale))))
+    if name == 'pointer':
+        width = image.get_width()
+        top_row = next(y for y in range(image.get_height())
+                       if any(image.get_at((x, y)).a > 128 for x in range(width)))
+        tip = [x for x in range(width) if image.get_at((x, top_row)).a > 128]
+        hotspot = (tip[len(tip) // 2], top_row)
+    else:
+        hotspot = (image.get_width() // 2, image.get_height() // 2)
+    return pygame.cursors.Cursor(hotspot, image)
 
 
 def cut_coin(game_map):
@@ -168,12 +172,11 @@ def is_bread(color):
     return color.r > color.b + 25 and color.b > 95
 
 
-def split_bread(game_map):
-    """Take the bread slice out of the map, so it can squash when a toast is hit.
+def erase_bread(game_map):
+    """Erase the bread slice painted on the old map: each toast drawing has its own bread now.
 
-    Only used while there is no separate bread drawing (assets/images/toasts/bread.png):
-    the old map has the bread painted on it, and each toast image only adds its face on top.
-    Returns (map without the bread, bread Sprite).
+    The hole is filled with the sky and floor, blending the colors at both sides of each row.
+    A map drawn without the bread is returned as it is.
     """
     width, height = game_map.get_size()
     start = pygame.Rect(config.TOAST_RECT).center
@@ -185,19 +188,19 @@ def split_bread(game_map):
                 and is_bread(game_map.get_at((x, y))):
             bread.set_at((x, y))
             to_visit += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+    if bread.count() < 1000:  # no bread painted here
+        return game_map
 
-    # Grow the shape a little so the soft edge of the crust comes along too
+    # Grow the shape a little so the soft edge of the crust goes too
     grown = pygame.mask.Mask((width, height))
     for dx in range(-2, 3):
         for dy in range(-2, 3):
             grown.draw(bread, (dx, dy))
     box = grown.get_bounding_rects()[0]
 
-    bread_image = pygame.Surface((width, height), pygame.SRCALPHA)
     background = game_map.copy()
     left_x, right_x = box.left - 1, box.right
     for y in range(box.top, box.bottom):
-        # Fill the hole with the background, blending the colors at both sides of the row
         left, right = game_map.get_at((left_x, y)), game_map.get_at((right_x, y))
         for x in range(box.left, box.right):
             if not grown.get_at((x, y)):
@@ -205,10 +208,9 @@ def split_bread(game_map):
             color = game_map.get_at((x, y))
             if color.r > color.b + 25 and not is_bread(color):  # the reward coin drawn over the bread
                 continue
-            bread_image.set_at((x, y), color)
             t = (x - left_x) / (right_x - left_x)
             background.set_at((x, y), left.lerp(right, t))
-    return background, make_sprite(bread_image, 'bread', {})
+    return background
 
 
 def cut_reward_badge(game_map):
@@ -326,15 +328,10 @@ class Assets:
         self.toasts = load_folder('toasts', positions)
         self.ui = load_folder('ui', positions)
         game_map = self.load_map('map1.png')
-        self.bread_drawn = 'bread' in self.toasts
-        if self.bread_drawn:  # the bread drawn on its own, with the map drawn without it
-            self.bread = self.toasts.pop('bread')
-        else:
-            _, self.bread = split_bread(game_map)
         self.reward_badge = cut_reward_badge(game_map)
         self.coin = cut_coin(game_map)
         self.maps = {'pt': self.split(game_map)}  # one per language, made when first needed
-        self.grab_cursor = make_grab_cursor()
+        self.cursors = {name: load_cursor(name) for name in ('pointer', 'grab')}
         self.click_sound = None  # stays None when there is no audio device (e.g. Codespaces)
         if pygame.mixer.get_init():
             self.click_sound = pygame.mixer.Sound(os.path.join(config.SOUNDS_DIR, 'quack.wav'))
@@ -345,8 +342,7 @@ class Assets:
         return pygame.transform.scale(game_map, (config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
 
     def split(self, game_map):
-        if not self.bread_drawn:
-            game_map, _ = split_bread(game_map)
+        game_map = erase_bread(game_map)
         game_map = erase_shop_titles(game_map)
         game_map, stats_panel = cut_stats_panel(game_map)
         background, shop, floor_row = split_map(game_map, self.reward_badge)

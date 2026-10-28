@@ -74,31 +74,15 @@ def toast_drawing(assets, name, mood=None):
     return localized(assets.toasts, name), mood is not None
 
 
-def toast_body(assets, toast):
-    """The bread slice with the toast's face on it (everything below the title): (image, rect)."""
-    body = assets.bread.rect
-    face = None
-    if toast is not None:
-        face = toast.rect.clip(
-            pygame.Rect(0, config.TOAST_TITLE_BOTTOM, config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
-        if face.width and face.height:
-            body = body.union(face)
-        else:
-            face = None
-    image = pygame.Surface(body.size, pygame.SRCALPHA)
-    image.blit(assets.bread.image, (assets.bread.pos[0] - body.x, assets.bread.pos[1] - body.y))
-    if face is not None:
-        image.blit(toast.image, (face.x - body.x, face.y - body.y), face.move(-toast.pos[0], -toast.pos[1]))
-    return image, body
-
-
 def draw_dead_toast(screen, assets, name, progress):
     """The beaten toast shrinks very fast until it disappears.
 
     Its face is "<toast>_dead.png" when it exists; until it is drawn, the toast turns gray.
     """
     toast, tint = toast_drawing(assets, name, 'dead')
-    image, body = toast_body(assets, toast)
+    if toast is None:
+        return
+    image, body = toast.image, toast.rect
     size = 1 - ease_in(progress)
     width, height = round(body.width * size), round(body.height * size)
     if width <= 0 or height <= 0:
@@ -150,7 +134,7 @@ def draw_shop_titles(screen, font):
 
 
 def draw_toast(screen, assets, state, effects, title_font=None):
-    """The bread slice and the toast's face, flinching when hit: they shake, squash and look hurt.
+    """The toast, flinching when hit: it shakes, squashes and looks hurt.
 
     A beaten toast shrinks away while the next one pops up (see effects.py).
     """
@@ -159,13 +143,13 @@ def draw_toast(screen, assets, state, effects, title_font=None):
         draw_dead_toast(screen, assets, effects.dead_toast, death)
 
     toast, tint = toast_drawing(assets, state.toast, 'hurt' if effects.is_hurt() else None)
-    # The toast's name is written with the font (the handwritten one, at the top of the
-    # drawing above TOAST_TITLE_BOTTOM, isn't drawn anymore)
-    if title_font is not None:
+    if title_font is not None:  # the toast's name, written with the font
         draw_toast_title(screen, title_font, state.toast)
+    if toast is None:
+        assets.reward_badge.draw(screen)
+        return
 
-    # The bread and the face move together
-    body_image, body = toast_body(assets, toast)
+    body_image, body = toast.image, toast.rect
     squish = effects.squish()
     spawn = effects.spawn()
     width = body.width * (1 + config.SQUISH_WIDTH * squish) * spawn

@@ -1,4 +1,5 @@
 """Main game loop and handling of clicks and keys."""
+import contextlib
 import sys
 
 import pygame
@@ -66,14 +67,14 @@ def play_quack(assets, state):
 
 
 def set_cursor(assets, grabbing):
-    """A grabbing hand while holding the muscular duck, the normal arrow otherwise."""
-    try:
-        if grabbing:
-            pygame.mouse.set_cursor(pygame.cursors.Cursor(config.GRAB_CURSOR_HOTSPOT, assets.grab_cursor))
-        else:
-            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
-    except pygame.error:  # some systems can't change the cursor: keep the normal one
-        pass
+    """The pointing hand all the time, and the grabbing hand while holding the muscular duck.
+
+    Without the drawings (assets/images/cursors), the computer's own cursors are used.
+    """
+    cursor = assets.cursors.get('grab' if grabbing else 'pointer')
+    with contextlib.suppress(pygame.error):  # some systems can't change the cursor
+        pygame.mouse.set_cursor(cursor or (pygame.SYSTEM_CURSOR_SIZEALL if grabbing
+                                           else pygame.SYSTEM_CURSOR_ARROW))
 
 
 def overlay_lines(screen_name, away=0, earned=0):
@@ -141,6 +142,7 @@ def main():
     state.on_buy = effects.duck_bought
     mouse_button_down = False
     grabbing = False  # the cursor is a grabbing hand
+    set_cursor(assets, grabbing)
     last_save = pygame.time.get_ticks()
     clock = pygame.time.Clock()
 

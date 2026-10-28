@@ -68,10 +68,18 @@ and say how the pace changed (today: level 54 in about 55 minutes).
 - Images are cropped to the drawing, and `assets.py` loads each as a `Sprite` (image + position).
   The owner draws on a 1280×720 canvas in the right spot and runs `python -m tools.crop_images`;
   the game also accepts an uncropped full-screen image. Maps (backgrounds) stay full-screen.
-- The bread slice is painted on the old map; until the owner draws `toasts/bread.png` (and a map
-  without the bread), `assets.split_bread` cuts it out at startup so it can squash with the face. A pained face is an optional `<toast>_hurt.png` the owner
-  draws; until it exists, the toast turns reddish while hurt. Likewise `<toast>_dead.png` is the face of a
-  beaten toast as it shrinks away (gray tint until drawn); the next toast pops up meanwhile.
+- Each toast drawing (2026-10-28) is the whole toast: bread and face, no name (the name is
+  written with the font). The old map still has a bread painted on it; `assets.erase_bread` paints
+  it over at startup (a map without bread is left alone). A pained face is an optional
+  `<toast>_hurt.png` the owner draws; until it exists, the toast turns reddish while hurt.
+  Likewise `<toast>_dead.png` is the face of a beaten toast as it shrinks away (gray tint until
+  drawn); the next toast pops up meanwhile.
+- Texts are written with a font (`config.TEXT_FONT`, files in `assets/fonts`, all OFL); the shop
+  names are erased from the map (`assets.erase_shop_titles`). `python -m tools.preview_fonts`
+  draws the game with each font. The owner hasn't picked the final font yet.
+- Mouse cursors are the owner's drawings in `assets/images/cursors/`: `pointer.png` all the
+  time (clicks at the fingertip) and `grab.png` while holding the muscular duck; both are made
+  `CURSOR_SIZE` big (`assets.load_cursor`).
 - One shared "locked" sign (`ui/locked.png`, drawn over the Siamese portrait) is resized and
   moved onto each duck's portrait circle (`config.SHOP_PORTRAITS`) when the player can't afford it.
 - Automatic hits react like a click, only gentler (`config.HIT_STRENGTH`: click 1, muscular duck 0.6,
