@@ -4,8 +4,9 @@ Everything is drawn as if the screen were 1280x720 (the size the art is drawn at
 part of the screen is pinned to its own spot of the window:
 
 - 'top_left':  the Duckcoins, DPS and damage boxes, stuck to the top-left corner;
-- 'top_right': the level buttons and the sound button, stuck to the top-right corner;
-- 'center':    the toast and the ducks, always in the middle;
+- 'top_center': the level buttons, stuck to the top (and centered left to right);
+- 'top_right': the settings button, stuck to the top-right corner;
+- 'center':    the toast and the ducks, in the middle (CENTER_DROP lower than in the map);
 - 'bottom':    the shop, stuck to the bottom (and centered left to right).
 
 When the window has a different shape than 16:9, the game gets extra room on the sides
@@ -14,7 +15,7 @@ or smaller, everything is scaled up or down to fit.
 """
 from . import config
 
-GROUPS = ('top_left', 'top_right', 'center', 'bottom')
+GROUPS = ('top_left', 'top_center', 'top_right', 'center', 'bottom')
 
 
 class Layout:
@@ -27,10 +28,13 @@ class Layout:
                      max(config.SCREEN_HEIGHT, round(height / self.scale)))
         self.extra_width = self.size[0] - config.SCREEN_WIDTH
         self.extra_height = self.size[1] - config.SCREEN_HEIGHT
+        # The sky and floor (the map's background) are centered; the toast and ducks are lower
+        self.background_y = self.extra_height // 2
         self.offsets = {
             'top_left': (0, 0),
+            'top_center': (self.extra_width // 2, 0),
             'top_right': (self.extra_width, 0),
-            'center': (self.extra_width // 2, self.extra_height // 2),
+            'center': (self.extra_width // 2, self.background_y + config.CENTER_DROP),
             'bottom': (self.extra_width // 2, self.extra_height),
         }
 

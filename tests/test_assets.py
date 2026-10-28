@@ -36,3 +36,18 @@ def test_every_cropped_image_in_the_game_has_a_position():
             size = pygame.image.load(os.path.join(folder, file_name)).get_size()
             if size != (config.SCREEN_WIDTH, config.SCREEN_HEIGHT):
                 assert f'{category}/{name}' in positions, f'{category}/{file_name} has no position'
+
+
+def test_the_map_is_split_for_the_new_interface():
+    from duck_vs_toast.assets import Assets, is_box_blue
+    from duck_vs_toast.ui import SHOP_ITEMS
+
+    pygame.display.init()
+    pygame.display.set_mode((1, 1))
+    parts = Assets().map_parts()
+    assert set(SHOP_ITEMS) <= set(parts.portraits)  # every duck in the shop has its portrait
+    panel = parts.stats_panel.image
+    blue = [(x, y) for x in range(0, panel.get_width(), 2) for y in range(0, panel.get_height(), 2)
+            if is_box_blue(panel.get_at((x, y)))]
+    assert blue == []  # the boxes were painted with the palette's cream
+    assert parts.background.get_height() == config.SHOP_TOP

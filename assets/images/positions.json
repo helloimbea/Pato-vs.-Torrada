@@ -19,11 +19,11 @@
   "ui/boss_timer_box": [706, 101],
   "ui/language_en": [1232, 50],
   "ui/language_pt": [1232, 50],
-  "ui/level_advance_off": [1018, 24],
-  "ui/level_advance_on": [1018, 24],
+  "ui/level_advance_off": [537, 6],
+  "ui/level_advance_on": [537, 6],
   "ui/locked": [105, 566],
-  "ui/next_level_off": [1177, 53],
-  "ui/next_level_on": [1177, 53],
+  "ui/next_level_off": [696, 35],
+  "ui/next_level_on": [696, 35],
   "ui/sound_off": [1232, 6],
   "ui/sound_on": [1232, 6]
 }

@@ -21,6 +21,7 @@ from duck_vs_toast.layout import Layout  # noqa: E402
 from duck_vs_toast.screen import Screen  # noqa: E402
 from duck_vs_toast.smacking import Smacking  # noqa: E402
 from duck_vs_toast.state import GameState  # noqa: E402
+from duck_vs_toast.ui import Ui  # noqa: E402
 
 OUTPUT_DIR = os.path.join(config.GAME_DIR, 'font_previews')
 
@@ -55,10 +56,8 @@ def main():
             state.level = level
             state.load_level()
             effects = Effects(clock=lambda: 0)
-            shop_button = shop.DUCKS[0].button_pos  # shows a tooltip, to see the small text too
-            offset_x, offset_y = layout.offsets['bottom']
-            mouse = (shop_button[0] + offset_x, shop_button[1] + offset_y)
-            screen.draw(window, layout, state, effects, Smacking(clock=lambda: 0), 0, mouse)
+            screen.draw(window, layout, state, effects, Smacking(clock=lambda: 0), Ui(clock=lambda: 0),
+                        0, (0, 0))
             path = os.path.join(OUTPUT_DIR, f'{name}_{language}.png')
             pygame.image.save(window, path)
             print(f'{name:<14} {language}: {path}')

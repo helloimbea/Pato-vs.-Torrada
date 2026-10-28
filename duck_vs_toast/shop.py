@@ -1,7 +1,8 @@
 """Duck shop: what each duck costs and what it does when bought.
 
 To create a new duck:
-  1. put its image in assets/images/ducks (the "locked" sign over its button is shared);
+  1. put its image in assets/images/ducks, and its round portrait for the shop
+     (config.SHOP_PORTRAITS says where portraits are);
   2. write an effect function (like the ones below);
   3. write a description function for the tooltip, and its name and text in i18n.py
      (in English and Portuguese, under the duck's name);
@@ -21,8 +22,6 @@ class Duck:
     name: str                # image name in assets/images/ducks
     starting_cost: int
     cost_multiplier: float   # the cost is multiplied by this after each purchase
-    button_pos: tuple        # center of the buy button
-    cost_text_pos: tuple     # where the cost is written
     effect: Callable         # function that receives the game state
     describe: Callable       # returns the tooltip text (what the next purchase does)
 
@@ -79,14 +78,10 @@ def realistic_duck_description(state):
 
 
 DUCKS = [
-    Duck('siamese_duck', 200, 1.5, (157, 605), (119, 675),
-         siamese_duck_effect, siamese_duck_description),
-    Duck('double_duck', 5000, 3, (399, 603), (381, 675),
-         double_duck_effect, double_duck_description),
-    Duck('muscular_duck', 50000, 2, (641, 603), (616, 675),
-         muscular_duck_effect, muscular_duck_description),
-    Duck('realistic_duck', 200000, 4, (883, 603), (863, 675),
-         realistic_duck_effect, realistic_duck_description),
+    Duck('siamese_duck', 200, 1.5, siamese_duck_effect, siamese_duck_description),
+    Duck('double_duck', 5000, 3, double_duck_effect, double_duck_description),
+    Duck('muscular_duck', 50000, 2, muscular_duck_effect, muscular_duck_description),
+    Duck('realistic_duck', 200000, 4, realistic_duck_effect, realistic_duck_description),
 ]
 
 

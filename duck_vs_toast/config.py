@@ -18,79 +18,107 @@ SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 SCREEN_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)  # the size the art is drawn at
 FONT_SIZE = 48
-SMALL_FONT_SIZE = 28  # purchase counters and tooltips
+SMALL_FONT_SIZE = 28  # tooltips
+FPS = 30  # frame rate limit
 
-# --- Text font ---
-# Every text in the game is written with this font (in assets/fonts; all are free to use,
-# see the -OFL.txt file next to each). To compare them: python -m tools.preview_fonts
+# --- Fonts ---
+# Texts are written with TEXT_FONT, and the big numbers (health, Duckcoins, level) with the
+# chunkier NUMBER_FONT. All are in assets/fonts and free to use (see the -OFL.txt next to
+# each). To compare the text fonts: python -m tools.preview_fonts
 FONTS = {
     'patrick_hand': 'PatrickHand-Regular.ttf',
     'itim': 'Itim-Regular.ttf',
     'indie_flower': 'IndieFlower-Regular.ttf',
     'mali': 'Mali-Bold.ttf',
     'short_stack': 'ShortStack-Regular.ttf',
+    'lilita_one': 'LilitaOne-Regular.ttf',
 }
 TEXT_FONT = 'patrick_hand'
-INK = (66, 66, 72)               # dark gray, like the pencil of the drawings
-TOAST_TITLE_CENTER = (640, 52)   # the toast's name, above it
-TOAST_TITLE_SIZE = 56
-TOAST_TITLE_MAX_WIDTH = 400     # longer names are made smaller (the ducks are beside it)
-SHOP_TITLE_TOP = 503             # the ducks' names in the shop, above their portraits...
-SHOP_TITLE_SIZE = 32
-SHOP_TITLE_LINE = 1.4            # from one line of a name to the next, in capital letters' heights
-SHOP_TITLE_MAX_WIDTH = 200
-SHOP_TITLE_AREA = (497, 568)     # ...where the old handwritten names are erased from the map
-FPS = 30  # frame rate limit
+NUMBER_FONT = 'lilita_one'
+
+# --- Colors: the game's palette. Each color means one thing, everywhere ---
+PANEL = (252, 248, 240)        # boxes, the shop, menus and tooltips: cream, like paper
+PANEL_EDGE = (214, 198, 172)   # their border
+INK = (66, 66, 72)             # texts: dark gray, like the pencil of the drawings
+INK_SOFT = (120, 112, 104)     # less important texts
+GOLD = (245, 180, 40)          # Duckcoins (and only Duckcoins)
+GOLD_DARK = (140, 86, 10)      # the outline of gold numbers
+HEALTH_RED = (232, 78, 94)     # health and danger
+HEALTH_RED_DARK = (150, 38, 52)
+HEALTH_TRACK = (240, 226, 222)  # the empty part of the health bar
+GREEN = (84, 170, 106)         # gains
+GREEN_DARK = (34, 96, 52)
+SHADE = (95, 100, 120)         # ducks the player can't buy yet are darkened with this
+RED = HEALTH_RED               # damage numbers
+TIMER_BLUE = (108, 137, 244)   # damage numbers of the DPS ducks
+TOOLTIP_BACKGROUND = PANEL
+BOOST_COLOR = (240, 170, 50)   # numbers boosted by the Bourgeois Duck
 
 # --- Resizable window (see layout.py) ---
 # The map is split in parts that follow the window's edges:
-SHOP_TOP = 472                     # the shop panel starts at this line, stuck to the bottom
+SHOP_TOP = 472                     # the old shop panel of the map starts here (it isn't drawn)
 # The Duckcoins, DPS and damage boxes (x, y, width, height), stuck to the top left
 STATS_BOXES = [(26, 6, 316, 112), (26, 116, 240, 88), (26, 206, 140, 86)]
-# When the window is wider, the background and shop keep their left and right ends at the
-# window's edges and stretch the plain part between these x positions
+# When the window is wider, the background keeps its left and right ends at the window's
+# edges and stretches the plain part between these x positions
 BACKGROUND_STRETCH = (260, 1080)
-SHOP_STRETCH = (40, 1240)
+CENTER_DROP = 90                   # the toast and the ducks are this much lower than in the map,
+                                   # to make room for the level buttons above the toast's name
 
-# --- Colors ---
-RED = (234, 95, 112)
-BLUE = (121, 161, 191)
-LIGHT_BLUE = (207, 228, 245)
-GREEN = (114, 167, 139)
-TIMER_BLUE = (108, 137, 244)
-DARK_BLUE = (62, 84, 110)
-TOOLTIP_BACKGROUND = (240, 246, 252)
-BOOST_COLOR = (240, 170, 50)  # numbers boosted by the Bourgeois Duck
+# --- Toast (in the toast's part of the screen, before CENTER_DROP) ---
+TOAST_RECT = (510, 201, 260, 242)  # x, y, width, height: where clicks hit the toast
+TOAST_TITLE_CENTER = (640, 68)     # the toast's name, above it
+TOAST_TITLE_SIZE = 56
+TOAST_TITLE_MAX_WIDTH = 400        # longer names are made smaller (the ducks are beside it)
+HEALTH_TEXT_CENTER = (652, 112)    # "3.3 K / 4.4 K", with the heart before it
+HEALTH_TEXT_SIZE = 40
+HEALTH_BAR = (515, 140, 250, 24)   # x, y, width, height (it has round ends)
+HEART_RECT = (480, 108, 55, 48)    # the heart drawn on the map, moved next to the health
+BOSS_TIMER_CENTER = (500, 152)     # the boss's countdown, in a circle at the bar's left end
+BOSS_TIMER_RADIUS = 30             # (ui/boss_timer.png, when drawn, is used instead of the circle)
+BOSS_TIMER_HURRY = 3               # the last seconds are red and the circle pulses
+BOSS_TAG_ANGLE = 12                # the "BOSS" label on the toast's name is tilted this much
+REWARD_CENTER = (640, 470)         # "+ (coin) 1.2 K" under the toast
+REWARD_BADGE_RECT = (495, 430, 115, 60)  # the old "+ coin" drawn on the map (erased)
 
-# --- Toast (clickable area) ---
-TOAST_RECT = (510, 201, 260, 242)  # x, y, width, height
+# --- Stats (top left) ---
+DUCKCOINS_ICON_POS = (82, 61)      # center of the coin in the Duckcoins box
+DUCKCOINS_ICON_SIZE = 62
+DAMAGE_ICON_POS = (55, 249)        # center of the click-damage icon (the mouse drawing)
+DAMAGE_ICON_SIZE = 46
+OLD_ICON_AREAS = [(46, 26, 74, 72), (28, 220, 52, 58)]  # the old coin and sword, erased
+DUCKCOINS_TEXT_LEFT = (128, 62)    # left end and middle height of the numbers
+DPS_TEXT_LEFT = (110, 161)
+DAMAGE_TEXT_LEFT = (88, 250)
+DUCKCOINS_TEXT_SIZE = 52
+STAT_TEXT_SIZE = 40
 
-# --- Toast health bar ---
-HEALTH_BAR_POS = (518, 160)
-HEALTH_BAR_WIDTH = 243
-HEALTH_BAR_HEIGHT = 20
+# --- Level buttons (top center) ---
+LEVEL_ADVANCE_BUTTON_POS = (640, 109)  # the lock under the level: farm the same level or advance
+LEVEL_ADVANCE_BUTTON_RADIUS = 24
+PREVIOUS_LEVEL_BUTTON_POS = (566, 61)
+NEXT_LEVEL_BUTTON_POS = (722, 61)
+LEVEL_ARROW_RADIUS = 24
+LEVEL_TEXT_CENTER = (640, 64)
+LEVEL_TEXT_SIZE = 52
 
-# --- Round buttons (center position and radius) ---
-LEVEL_ADVANCE_BUTTON_POS = (1121, 127)
-LEVEL_ADVANCE_BUTTON_RADIUS = 40
-PREVIOUS_LEVEL_BUTTON_POS = (1047, 79)
-PREVIOUS_LEVEL_BUTTON_RADIUS = 20
-NEXT_LEVEL_BUTTON_POS = (1203, 79)
-NEXT_LEVEL_BUTTON_RADIUS = 20
-SOUND_BUTTON_POS = (1252, 26)
-SOUND_BUTTON_RADIUS = 18
-LANGUAGE_BUTTON_POS = (1252, 70)
-LANGUAGE_BUTTON_RADIUS = 18
-SHOP_BUTTON_RADIUS = 40
+# --- Settings (top right) ---
+GEAR_POS = (1240, 38)          # the gear button opens a menu with the sound and language buttons
+GEAR_RADIUS = 26
+MENU_STEP = 52                 # from one button of the menu to the next
+MENU_BUTTON_RADIUS = 22
 
-# --- Shop extras ---
-PURCHASE_COUNT_OFFSET = (48, -12)  # where "x3" is written, relative to each buy button's center
-BOURGEOIS_BUTTON_POS = (1125, 603)
-
-# The round duck portraits drawn on the shop: (center x, center y, diameter).
-# The "locked" sign (ui/locked.png) was drawn over the Siamese duck's portrait; on the
-# others it is resized and moved to fit their circle. A duck missing here uses the
-# Siamese size, centered on its buy button.
+# --- Shop (bottom): a panel that slides up when its button is clicked ---
+SHOP_PANEL = (24, 572, 1232, 140)  # x, y, width, height when open
+SHOP_PORTRAIT_Y = 68               # the ducks' middle, from the top of the panel
+SHOP_TAB_SIZE = (170, 46)          # the shop's button
+SHOP_TAB_TEXT_SIZE = 36
+SHOP_SLIDE_TIME = 260
+SHOP_HOP_EVERY = 1600              # ducks the player can buy hop (and glow) every 1.6 s
+SHOP_HOP_HEIGHT = 10
+COUNT_BADGE_RADIUS = 14            # the bubble with how many of a duck were bought
+# The round duck portraits drawn on the map's old shop: (center x, center y, diameter).
+# They are cut out of the map and shown in the new shop, in this order from left to right.
 SHOP_PORTRAITS = {
     'siamese_duck': (155.5, 617, 86),
     'double_duck': (398.5, 614, 85),
@@ -98,15 +126,6 @@ SHOP_PORTRAITS = {
     'realistic_duck': (882.5, 608.5, 79),
     'bourgeois_duck': (1125.5, 613.5, 81),
 }
-
-# --- Text positions ---
-HEALTH_TEXT_POS = (541, 115)
-DUCKCOINS_TEXT_POS = (130, 45)
-DPS_TEXT_POS = (110, 145)
-DAMAGE_TEXT_POS = (72, 235)
-REWARD_TEXT_POS = (610, 448)
-BOSS_TIMER_TEXT_POS = (711, 114)
-LEVEL_TEXT_POS = (1100, 68)
 
 # --- Animations (times in milliseconds) ---
 DAMAGE_NUMBER_DURATION = 800   # how long a damage number stays on screen
@@ -123,7 +142,6 @@ HURT_TINT = (255, 205, 205)    # reddish tint used while a toast has no "_hurt" 
 # the shake, the squash and how long the pained face stays all get this much smaller.
 HIT_STRENGTH = {'click': 1.0, 'auto': 0.6, 'dps': 0.4, 'smack': 1.5, 'smack_crit': 2.0}
 AUTO_CLICK_TIP = (738, 355)    # tip of the muscular duck's pointer: its damage numbers pop up here
-REWARD_BADGE_RECT = (495, 430, 115, 60)  # the "+ coin" under the toast, drawn in front of it
 DEATH_DURATION = 220           # a beaten toast shrinks away this fast
 DEATH_TINT = (165, 165, 175)   # grayish tint used while a toast has no "_dead" drawing yet
 SPAWN_DELAY = 180              # the next toast pops up this long after the old one starts shrinking
@@ -137,8 +155,6 @@ COIN_BURST_TIME = 250          # coins pop out of the toast...
 COIN_FLIGHT_TIME = 550         # ...then fly to the Duckcoins counter
 COIN_SIZE = 34
 COUNTER_SPEED = 150            # the Duckcoins counter rolls up to new Duckcoins (smaller = faster)
-DUCKCOINS_ICON_POS = (82, 61)  # center of the coin drawn in the Duckcoins box (map image)
-DUCKCOINS_ICON_RADIUS = 28
 
 # --- Timings (in milliseconds) ---
 DPS_INTERVAL = 1000                  # how often DPS damage is applied (1000 = once per second)
@@ -158,7 +174,6 @@ BOURGEOIS_DURATION = 60_000          # the boost lasts 1 minute...
 BOURGEOIS_COOLDOWN = 600_000         # ...and it can be bought again 10 minutes after buying
 BOURGEOIS_DAMAGE_MULTIPLIER = 2      # all damage (clicks, DPS, muscular duck) while boosted
 BOURGEOIS_REWARD_MULTIPLIER = 2      # Duckcoins from each toast while boosted
-BOURGEOIS_COST_TEXT_POS = (1105, 675)
 
 # --- Smacking with the muscular duck (a secret: nothing in the game tells about it) ---
 SMACK_DAMAGE = 5               # a smack does 5 times the click damage...

@@ -5,34 +5,45 @@ from duck_vs_toast import config
 from duck_vs_toast.layout import Layout
 from duck_vs_toast.screen import stretch
 
+DROP = config.CENTER_DROP
+
 
 def test_original_size_keeps_everything_in_place():
     layout = Layout(config.SCREEN_SIZE)
     assert layout.scale == 1
     assert layout.size == config.SCREEN_SIZE
-    assert set(layout.offsets.values()) == {(0, 0)}
+    assert layout.offsets == {'top_left': (0, 0), 'top_center': (0, 0), 'top_right': (0, 0),
+                              'center': (0, DROP), 'bottom': (0, 0)}
     assert layout.to_group('bottom', (157, 605)) == (157, 605)
+
+
+def test_the_toast_and_ducks_are_lower_than_in_the_map():
+    layout = Layout(config.SCREEN_SIZE)
+    assert layout.to_group('center', (640, 360 + DROP)) == (640, 360)
+    assert layout.background_y == 0  # the sky and floor stay where they are
 
 
 def test_bigger_window_with_same_shape_only_scales():
     layout = Layout((1920, 1080))
     assert layout.scale == 1.5
     assert layout.size == config.SCREEN_SIZE
-    assert layout.to_group('center', (960, 540)) == (640, 360)
+    assert layout.to_group('center', (960, (360 + DROP) * 1.5)) == (640, 360)
 
 
 def test_wider_window_pins_parts_to_the_edges():
     layout = Layout((1800, 720))
     assert layout.size == (1800, 720)
-    assert layout.offsets == {'top_left': (0, 0), 'top_right': (520, 0),
-                              'center': (260, 0), 'bottom': (260, 0)}
-    # The sound button (top right corner) is still at the window's right edge
-    assert layout.to_group('top_right', (1252 + 520, 26)) == config.SOUND_BUTTON_POS
+    assert layout.offsets == {'top_left': (0, 0), 'top_center': (260, 0), 'top_right': (520, 0),
+                              'center': (260, DROP), 'bottom': (260, 0)}
+    # The settings button (top right corner) is still at the window's right edge
+    gear_x, gear_y = config.GEAR_POS
+    assert layout.to_group('top_right', (gear_x + 520, gear_y)) == config.GEAR_POS
 
 
 def test_taller_window_puts_the_shop_at_the_bottom():
     layout = Layout((1280, 1000))
-    assert layout.offsets['center'] == (0, 140)
+    assert layout.background_y == 140
+    assert layout.offsets['center'] == (0, 140 + DROP)
     assert layout.offsets['bottom'] == (0, 280)
     assert layout.to_group('bottom', (157, 605 + 280)) == (157, 605)
 
@@ -41,7 +52,8 @@ def test_smaller_window_scales_down():
     layout = Layout((640, 400))
     assert layout.scale == 0.5
     assert layout.size == (1280, 800)
-    assert layout.to_group('center', (320, 200)) == (640, 360)
+    # The canvas is 80 pixels taller: the sky and floor go 40 down, the toast DROP more
+    assert layout.to_group('center', (320, (360 + 40 + DROP) / 2)) == (640, 360)
 
 
 @pytest.mark.parametrize('size', [(0, 0), (1, 1000)])
