@@ -1,16 +1,18 @@
 """Main game loop and handling of clicks and keys."""
+import contextlib
 import sys
 
 import pygame
 
 from . import config, save, shop
-from .assets import Assets
+from .assets import Assets, load_font, localized
 from .clock import GameClock
 from .effects import Effects
 from .i18n import t
 from .layout import Layout
 from .numbers import format_number
 from .screen import Screen
+from .smacking import Smacking
 from .state import GameState
 
 
@@ -55,8 +57,24 @@ def handle_click(event, state, assets, toast_rect, layout):
             hit_something = True
 
     # Quack only when the click hit the toast or a button
-    if hit_something and assets.click_sound and not state.muted:
+    if hit_something:
+        play_quack(assets, state)
+
+
+def play_quack(assets, state):
+    if assets.click_sound and not state.muted:
         assets.click_sound.play()
+
+
+def set_cursor(assets, grabbing):
+    """The pointing hand all the time, and the grabbing hand while holding the muscular duck.
+
+    Without the drawings (assets/images/cursors), the computer's own cursors are used.
+    """
+    cursor = assets.cursors.get('grab' if grabbing else 'pointer')
+    with contextlib.suppress(pygame.error):  # some systems can't change the cursor
+        pygame.mouse.set_cursor(cursor or (pygame.SYSTEM_CURSOR_SIZEALL if grabbing
+                                           else pygame.SYSTEM_CURSOR_ARROW))
 
 
 def overlay_lines(screen_name, away=0, earned=0):
@@ -90,8 +108,8 @@ def main():
         print('No audio device found, playing without sound.')
 
     assets = Assets()
-    font = pygame.font.SysFont(None, config.FONT_SIZE)
-    small_font = pygame.font.SysFont(None, config.SMALL_FONT_SIZE)
+    font = load_font(config.FONT_SIZE)
+    small_font = load_font(config.SMALL_FONT_SIZE)
     screen = Screen(assets, font, small_font)
     layout = Layout(window.get_size())
     toast_rect = pygame.Rect(config.TOAST_RECT)
@@ -108,12 +126,23 @@ def main():
     overlay = 'start'  # 'start', 'paused', 'victory' or None while playing
 
     effects = Effects(clock=game_clock)
-    # Clicks pop their damage number where the mouse is; automatic hits pop on the toast
-    state.on_hit = lambda amount, kind: effects.hit(
-        amount, kind, layout.to_group('center', pygame.mouse.get_pos()) if kind == 'click' else None)
+    smacking = Smacking(clock=game_clock)
+
+    def hit_position(kind):
+        """Clicks pop their damage number where the mouse is, smacks where the duck hit;
+        automatic hits pop on the toast."""
+        if kind == 'click':
+            return layout.to_group('center', pygame.mouse.get_pos())
+        if kind.startswith('smack'):
+            return smacking.impact
+        return None
+
+    state.on_hit = lambda amount, kind: effects.hit(amount, kind, hit_position(kind))
     state.on_defeat = lambda: effects.defeat(state.toast)  # still the beaten toast here
     state.on_buy = effects.duck_bought
     mouse_button_down = False
+    grabbing = False  # the cursor is a grabbing hand
+    set_cursor(assets, grabbing)
     last_save = pygame.time.get_ticks()
     clock = pygame.time.Clock()
 
@@ -138,9 +167,21 @@ def main():
                     game_clock.resume()
             elif escape:
                 overlay = 'paused'
+                smacking.release()
                 game_clock.pause()
             elif clicked:
-                handle_click(event, state, assets, toast_rect, layout)
+                # A press on the muscular duck picks it up (a secret, see smacking.py)
+                in_center = layout.to_group('center', event.pos)
+                muscular = localized(assets.ducks, 'muscular_duck')
+                if smacking.can_grab(state, in_center, muscular):
+                    smacking.grab(in_center, muscular)
+                else:
+                    handle_click(event, state, assets, toast_rect, layout)
+            elif event.type == pygame.MOUSEMOTION and smacking.held:
+                if smacking.move(layout.to_group('center', event.pos), state):
+                    play_quack(assets, state)
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1 and smacking.held:
+                smacking.release()
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
                 state.toggle_mute()
@@ -164,8 +205,12 @@ def main():
             layout = Layout(window.get_size())
         now = game_clock()
         state.update(now)
+        smacking.update(localized(assets.ducks, 'muscular_duck'))
+        if smacking.held != grabbing:
+            grabbing = smacking.held
+            set_cursor(assets, grabbing)
         effects.update(state.duckcoins)
         lines = overlay_lines(overlay, away or 0, earned) if overlay else None
-        screen.draw(window, layout, state, effects, now, pygame.mouse.get_pos(), lines)
+        screen.draw(window, layout, state, effects, smacking, now, pygame.mouse.get_pos(), lines)
         pygame.display.update()
         clock.tick(config.FPS)

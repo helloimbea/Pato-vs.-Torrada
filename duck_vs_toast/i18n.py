@@ -37,6 +37,17 @@ TEXTS = {
         'bourgeois_active': 'Active! {time} left.',
         'bourgeois_recharging': 'Recharging: ready in {time}.',
         'bourgeois_recharge_info': 'Recharges for {minutes} min after buying.',
+        'nerd_toast': 'Nerd Toast',
+        'happy_toast': 'Happy Toast',
+        'upside_down_toast': 'Toast',  # written upside down
+        'moldy_toast': 'Moldy Toast',
+        'coquette_toast': 'Coquette Toast',
+        'question_mark_toast': 'Toast?',
+        'clown_toast': 'Clown Toast',
+        'uwu_toast': 'UwU Toast',
+        'tiny_toast': 'Tiny Toast',
+        'hat_toast': 'Toast with a Hat',
+        'what_are_you_doing_toast': 'What are you doing?',
     },
     'pt': {
         'title': 'Pato vs. Torrada',
@@ -62,6 +73,17 @@ TEXTS = {
         'bourgeois_active': 'Ativo! Faltam {time}.',
         'bourgeois_recharging': 'Recarregando: pronto em {time}.',
         'bourgeois_recharge_info': 'Recarrega por {minutes} min depois de comprar.',
+        'nerd_toast': 'Torrada nerd',
+        'happy_toast': 'Torrada feliz',
+        'upside_down_toast': 'Torrada',  # escrito de cabeça para baixo
+        'moldy_toast': 'Torrada mofada',
+        'coquette_toast': 'Torrada coquette',
+        'question_mark_toast': 'Torrada?',
+        'clown_toast': 'Torrada palhaço',
+        'uwu_toast': 'Torrada UwU',
+        'tiny_toast': 'Torradinha',
+        'hat_toast': 'Torrada de chapéu',
+        'what_are_you_doing_toast': 'O que você está fazendo?',
     },
 }
 

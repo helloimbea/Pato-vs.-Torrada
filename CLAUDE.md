@@ -30,11 +30,13 @@ duck_vs_toast/
   i18n.py                  texts written by code, English + Portuguese; t('key')
   numbers.py               short numbers: 1500 -> "1.5 K"
   effects.py               animations: damage numbers, toast shake, flying coins
+  smacking.py              secret: grabbing the muscular duck to smack the toast (movement only)
   assets.py                loads images and sounds
   game.py                  main loop, clicks and keys
 tools/simulate_balance.py  virtual player that measures the game's pace
 tools/make_placeholder_icons.py  temporary sound / next-level icons
 tools/crop_images.py       crops full-screen drawings, saves positions
+tools/make_readme_logo.py  the README picture (docs/logo.png): starter duck + name in the font
 tests/                     pytest tests
 assets/images/...          art, cropped to the drawing; assets/images/positions.json says where each goes
 IDEAS.md                   the owner's notepad of future ideas (theirs to edit)
@@ -67,10 +69,18 @@ and say how the pace changed (today: level 54 in about 55 minutes).
 - Images are cropped to the drawing, and `assets.py` loads each as a `Sprite` (image + position).
   The owner draws on a 1280×720 canvas in the right spot and runs `python -m tools.crop_images`;
   the game also accepts an uncropped full-screen image. Maps (backgrounds) stay full-screen.
-- The bread slice is painted on the old map; until the owner draws `toasts/bread.png` (and a map
-  without the bread), `assets.split_bread` cuts it out at startup so it can squash with the face. A pained face is an optional `<toast>_hurt.png` the owner
-  draws; until it exists, the toast turns reddish while hurt. Likewise `<toast>_dead.png` is the face of a
-  beaten toast as it shrinks away (gray tint until drawn); the next toast pops up meanwhile.
+- Each toast drawing (2026-10-28) is the whole toast: bread and face, no name (the name is
+  written with the font). The old map still has a bread painted on it; `assets.erase_bread` paints
+  it over at startup (a map without bread is left alone). A pained face is an optional
+  `<toast>_hurt.png` the owner draws; until it exists, the toast turns reddish while hurt.
+  Likewise `<toast>_dead.png` is the face of a beaten toast as it shrinks away (gray tint until
+  drawn); the next toast pops up meanwhile.
+- Texts are written with a font (`config.TEXT_FONT`, files in `assets/fonts`, all OFL); the shop
+  names are erased from the map (`assets.erase_shop_titles`). `python -m tools.preview_fonts`
+  draws the game with each font. The owner hasn't picked the final font yet.
+- Mouse cursors are the owner's drawings in `assets/images/cursors/`: `pointer.png` all the
+  time (clicks at the fingertip) and `grab.png` while holding the muscular duck; both are made
+  `CURSOR_SIZE` big (`assets.load_cursor`).
 - One shared "locked" sign (`ui/locked.png`, drawn over the Siamese portrait) is resized and
   moved onto each duck's portrait circle (`config.SHOP_PORTRAITS`) when the player can't afford it.
 - Automatic hits react like a click, only gentler (`config.HIT_STRENGTH`: click 1, muscular duck 0.6,
@@ -92,6 +102,13 @@ and say how the pace changed (today: level 54 in about 55 minutes).
 - Screens: start (with "welcome back" earnings), pause (Esc), victory once all toasts are beaten
   (`state.has_won`, shown once). They are text drawn by code in `game.py`; the game clock is
   paused behind them.
+- Smacking (owner's idea, reworked 2026-10-23): an easter egg the player finds alone, so no
+  tooltip, README or hint mentions it. Only the muscular duck: hold it and drag it into the toast;
+  each entry is a smack (it must come out before the next). A smack does `SMACK_DAMAGE` (5) x click
+  damage, with a `SMACK_CRIT_CHANCE` (15%) critical hit x`SMACK_CRIT_MULTIPLIER` (5). After
+  `SMACKS_BEFORE_REST` (5) smacks it rests `MUSCULAR_REST` (2 min): grayish, see-through, timer
+  above, no auto-click and no pointer. Rules in `GameState.smack_toast` (saved: `smacks`,
+  `muscular_rest_left`), movement in `smacking.py`. The simulator and offline earnings ignore it.
 - Languages (owner asked 2026-10-09): English and Portuguese, switched with L or the EN/PT button
   (placeholder icons `ui/language_en.png`, `ui/language_pt.png`), saved with the progress; first run
   uses the computer's language. Code text lives in `i18n.py` (every key in both languages; tests

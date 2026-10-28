@@ -1,4 +1,6 @@
 """Game state: everything that changes while playing (level, health, Duckcoins, ...)."""
+import random
+
 import pygame
 
 from . import config, i18n, levels
@@ -6,10 +8,11 @@ from .shop import DUCKS
 
 
 class GameState:
-    def __init__(self, clock=pygame.time.get_ticks):
+    def __init__(self, clock=pygame.time.get_ticks, rng=None):
         # clock() returns the current time in milliseconds. The game uses Pygame's
         # clock; the tests and the balance simulator pass a fake one.
         self.clock = clock
+        self.random = rng or random.Random()  # for critical hits; tests pass their own
         now = clock()
 
         # Progress
@@ -38,6 +41,8 @@ class GameState:
         self.costs = {duck.name: duck.starting_cost for duck in DUCKS}
         self.ducks_on_screen = []
         self.purchases = {duck.name: 0 for duck in DUCKS}
+        self.smacks = 0                # muscular duck: smacks since its last rest (see smacking.py)
+        self.muscular_rest_end = None  # when its rest ends (it does no damage while resting)
 
         # Bourgeois Duck: a boost for a while, then it has to recharge (times from clock())
         self.boost_end = None       # when the current boost ends
@@ -136,10 +141,36 @@ class GameState:
         """Duckcoins for beating the current toast, with the Bourgeois boost."""
         return self.reward * self.reward_multiplier()
 
+    # --- Smacking with the muscular duck ---
+    # A secret: the muscular duck can be grabbed and used to smack the toast (see smacking.py).
+    # After SMACKS_BEFORE_REST smacks it goes away to rest, and does no damage meanwhile.
+
+    def is_muscular_resting(self):
+        return self.muscular_rest_end is not None and self.clock() < self.muscular_rest_end
+
+    def muscular_rest_left(self):
+        """Milliseconds before the muscular duck is back (0 when it isn't resting)."""
+        return max(0, self.muscular_rest_end - self.clock()) if self.muscular_rest_end is not None else 0
+
+    def smack_toast(self):
+        """The muscular duck smacked the toast. Returns 'crit', 'hit', or None if it can't."""
+        if 'muscular_duck' not in self.ducks_on_screen or self.is_muscular_resting():
+            return None
+        crit = self.random.random() < config.SMACK_CRIT_CHANCE
+        damage = self.click_damage() * config.SMACK_DAMAGE
+        if crit:
+            damage *= config.SMACK_CRIT_MULTIPLIER
+        self.smacks += 1
+        if self.smacks >= config.SMACKS_BEFORE_REST:
+            self.smacks = 0
+            self.muscular_rest_end = self.clock() + config.MUSCULAR_REST
+        self.deal_damage(damage, 'smack_crit' if crit else 'smack')
+        return 'crit' if crit else 'hit'
+
     # --- Combat ---
 
     def deal_damage(self, amount, kind='click'):
-        """Hit the toast. kind is 'click', 'auto' (muscular duck) or 'dps'."""
+        """Hit the toast. kind is 'click', 'auto' (muscular duck), 'dps', 'smack' or 'smack_crit'."""
         if self.health == 0:
             return
         self.health = max(self.health - amount, 0)
@@ -174,7 +205,7 @@ class GameState:
     def update(self, now):
         """Called once per frame: automatic damage and boss timer."""
         # Muscular duck's automatic click
-        if self.has_auto_click:
+        if self.has_auto_click and not self.is_muscular_resting():
             hit, self.last_auto_click = self.interval_passed(
                 now, self.last_auto_click, self.auto_click_interval)
             if hit:

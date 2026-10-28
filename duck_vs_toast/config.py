@@ -8,6 +8,9 @@ import os
 GAME_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMAGES_DIR = os.path.join(GAME_DIR, 'assets', 'images')
 SOUNDS_DIR = os.path.join(GAME_DIR, 'assets', 'sounds')
+FONTS_DIR = os.path.join(GAME_DIR, 'assets', 'fonts')
+CURSORS_DIR = os.path.join(IMAGES_DIR, 'cursors')  # pointer.png (always) and grab.png (holding a duck)
+CURSOR_SIZE = 44  # the cursor drawings are made this big (their longest side, in pixels)
 POSITIONS_FILE = os.path.join(IMAGES_DIR, 'positions.json')  # where each cropped image goes
 
 # --- Screen ---
@@ -16,6 +19,27 @@ SCREEN_HEIGHT = 720
 SCREEN_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)  # the size the art is drawn at
 FONT_SIZE = 48
 SMALL_FONT_SIZE = 28  # purchase counters and tooltips
+
+# --- Text font ---
+# Every text in the game is written with this font (in assets/fonts; all are free to use,
+# see the -OFL.txt file next to each). To compare them: python -m tools.preview_fonts
+FONTS = {
+    'patrick_hand': 'PatrickHand-Regular.ttf',
+    'itim': 'Itim-Regular.ttf',
+    'indie_flower': 'IndieFlower-Regular.ttf',
+    'mali': 'Mali-Bold.ttf',
+    'short_stack': 'ShortStack-Regular.ttf',
+}
+TEXT_FONT = 'patrick_hand'
+INK = (66, 66, 72)               # dark gray, like the pencil of the drawings
+TOAST_TITLE_CENTER = (640, 52)   # the toast's name, above it
+TOAST_TITLE_SIZE = 56
+TOAST_TITLE_MAX_WIDTH = 400     # longer names are made smaller (the ducks are beside it)
+SHOP_TITLE_TOP = 503             # the ducks' names in the shop, above their portraits...
+SHOP_TITLE_SIZE = 32
+SHOP_TITLE_LINE = 1.4            # from one line of a name to the next, in capital letters' heights
+SHOP_TITLE_MAX_WIDTH = 200
+SHOP_TITLE_AREA = (497, 568)     # ...where the old handwritten names are erased from the map
 FPS = 30  # frame rate limit
 
 # --- Resizable window (see layout.py) ---
@@ -97,10 +121,9 @@ HURT_DURATION = 300            # how long the pained face stays
 HURT_TINT = (255, 205, 205)    # reddish tint used while a toast has no "_hurt" drawing yet
 # How strongly the toast reacts to each kind of hit (1 = the full reaction to a click):
 # the shake, the squash and how long the pained face stays all get this much smaller.
-HIT_STRENGTH = {'click': 1.0, 'auto': 0.6, 'dps': 0.4}
+HIT_STRENGTH = {'click': 1.0, 'auto': 0.6, 'dps': 0.4, 'smack': 1.5, 'smack_crit': 2.0}
 AUTO_CLICK_TIP = (738, 355)    # tip of the muscular duck's pointer: its damage numbers pop up here
 REWARD_BADGE_RECT = (495, 430, 115, 60)  # the "+ coin" under the toast, drawn in front of it
-TOAST_TITLE_BOTTOM = 95        # the toast images have their name above this line; it doesn't squish
 DEATH_DURATION = 220           # a beaten toast shrinks away this fast
 DEATH_TINT = (165, 165, 175)   # grayish tint used while a toast has no "_dead" drawing yet
 SPAWN_DELAY = 180              # the next toast pops up this long after the old one starts shrinking
@@ -136,6 +159,23 @@ BOURGEOIS_COOLDOWN = 600_000         # ...and it can be bought again 10 minutes 
 BOURGEOIS_DAMAGE_MULTIPLIER = 2      # all damage (clicks, DPS, muscular duck) while boosted
 BOURGEOIS_REWARD_MULTIPLIER = 2      # Duckcoins from each toast while boosted
 BOURGEOIS_COST_TEXT_POS = (1105, 675)
+
+# --- Smacking with the muscular duck (a secret: nothing in the game tells about it) ---
+SMACK_DAMAGE = 5               # a smack does 5 times the click damage...
+SMACK_CRIT_CHANCE = 0.15       # ...and 15% of the smacks are critical hits...
+SMACK_CRIT_MULTIPLIER = 5      # ...that do 5 times more (25 clicks)
+SMACKS_BEFORE_REST = 5         # after this many smacks the duck goes away to rest...
+MUSCULAR_REST = 120_000        # ...for 2 minutes, and does no damage meanwhile
+SMACK_MARGIN = 20              # the duck has to go this far into the toast to smack it
+GRAB_ALPHA = 60                # only grab the duck by its drawing, not its see-through corners
+HELD_LIFT = 1.08               # the held duck looks a bit bigger, as if picked up
+RETURN_TIME = 450              # how long the duck takes to hop back to its spot when let go
+RETURN_ARC = 60                # how high it hops on the way back
+RESTING_TINT = (170, 170, 180)  # a resting duck is grayish...
+RESTING_ALPHA = 140            # ...and see-through (0 = invisible, 255 = solid)
+CRIT_COLOR = (240, 170, 50)    # critical hit numbers
+SCREEN_SHAKE = {'smack': 7, 'smack_crit': 16}  # how many pixels the whole screen shakes
+SCREEN_SHAKE_DURATION = 280
 
 # --- Saving and offline earnings ---
 SAVE_FILE = os.path.join(os.path.expanduser('~'), '.duck_vs_toast', 'save.json')

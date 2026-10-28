@@ -51,11 +51,13 @@ class Effects:
         self.count_from = 0          # the counter waits until then, for the coins to arrive
         self.last_update = self.clock()
         self.duck_pops = {}  # duck name -> (when it was bought, whether it just appeared)
+        self.screen_shake_start = -config.SCREEN_SHAKE_DURATION
+        self.screen_shake_strength = 0
 
     # --- Things that happened in the game ---
 
     def hit(self, amount, kind, position=None):
-        """A toast was hit. kind is 'click', 'auto' (muscular duck) or 'dps'.
+        """A toast was hit. kind is 'click', 'auto' (muscular duck), 'dps', 'smack' or 'smack_crit'.
 
         Automatic hits make the toast react like a click, only more gently.
         """
@@ -68,12 +70,16 @@ class Effects:
                         y + self.random.uniform(0.15, 0.6) * height)
         else:  # a little sideways jitter, so fast hits don't pile up in one spot
             position = (position[0] + self.random.uniform(-15, 15), position[1])
-        color = config.TIMER_BLUE if kind == 'dps' else config.RED
+        color = {'dps': config.TIMER_BLUE, 'smack_crit': config.CRIT_COLOR}.get(kind, config.RED)
+        text = format_number(amount) + ('!' if kind == 'smack_crit' else '')
         self.damage_numbers.append(
-            DamageNumber(format_number(amount), color, position[0], position[1], now))
+            DamageNumber(text, color, position[0], position[1], now))
         # Many hits per second would fill the screen, so only the newest ones stay
         del self.damage_numbers[:-config.MAX_DAMAGE_NUMBERS]
         # A gentle hit doesn't cut short a stronger reaction that is still going on
+        if kind in config.SCREEN_SHAKE:  # the muscular duck's smack shakes the whole screen
+            self.screen_shake_start = now
+            self.screen_shake_strength = config.SCREEN_SHAKE[kind]
         strength = config.HIT_STRENGTH[kind]
         if not (self.is_hurt() and self.strength > strength):
             self.strength = strength
@@ -107,6 +113,14 @@ class Effects:
             return 0, 0
         strength = config.SHAKE_STRENGTH * self.strength * (1 - elapsed / config.SHAKE_DURATION)
         return round(math.sin(elapsed / 15) * strength), round(math.cos(elapsed / 20) * strength / 2)
+
+    def screen_offset(self):
+        """How far to move the whole screen this frame, (0, 0) when it isn't shaking."""
+        elapsed = self.clock() - self.screen_shake_start
+        if elapsed >= config.SCREEN_SHAKE_DURATION:
+            return 0, 0
+        strength = self.screen_shake_strength * (1 - elapsed / config.SCREEN_SHAKE_DURATION)
+        return round(math.sin(elapsed / 11) * strength), round(math.cos(elapsed / 17) * strength)
 
     def squish(self):
         """How squashed the toast is: 0 = normal, 1 = fully squashed. It squashes fast and springs back."""

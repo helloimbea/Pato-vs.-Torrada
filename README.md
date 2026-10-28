@@ -1,7 +1,11 @@
-# 🦆 Duck vs. Toast
-(or "Pato vs. Torrada")
+<p align="center">
+  <img src="docs/logo.png" alt="Duck vs. Toast" width="480">
+</p>
 
-*A clicker game where ducks battle against evil toasts!*
+<p align="center">
+  (or "Pato vs. Torrada")<br>
+  <em>A clicker game where ducks battle against evil toasts!</em>
+</p>
 
 ---
 

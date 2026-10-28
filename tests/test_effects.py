@@ -192,3 +192,28 @@ def test_duckcoins_counter_goes_down_at_once_when_spending(effects):
     fx.update(5000)
     fx.update(200)
     assert fx.shown_duckcoins == 200
+
+
+def test_a_hurt_toast_never_changes_its_own_drawing():
+    """The red "hurt" tint goes on a copy: drawing it again and again must not make it redder."""
+    from types import SimpleNamespace
+
+    from duck_vs_toast.assets import Sprite
+    from duck_vs_toast.screen import draw_toast
+
+    pygame.display.init()
+    pygame.display.set_mode((1, 1))
+    drawing = pygame.Surface((100, 100), pygame.SRCALPHA)
+    drawing.fill((250, 240, 200, 255))
+    state, _ = new_game()
+    assets = SimpleNamespace(toasts={state.toast: Sprite(drawing, (500, 200))},
+                             reward_badge=Sprite(pygame.Surface((1, 1), pygame.SRCALPHA), (0, 0)))
+    clock = FakeClock()
+    effects = Effects(clock=clock, rng=random.Random(1))
+    screen = pygame.Surface(config.SCREEN_SIZE)
+    for _ in range(50):
+        effects.hit(1, 'click', (550, 250))
+        clock.now += config.SQUISH_DURATION + 10  # still hurt, but no longer squashed
+        assert effects.is_hurt() and effects.squish() == 0
+        draw_toast(screen, assets, state, effects)
+    assert tuple(drawing.get_at((50, 50))) == (250, 240, 200, 255)

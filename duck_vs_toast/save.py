@@ -16,7 +16,7 @@ SAVE_VERSION = 1
 SAVED_FIELDS = [
     'duckcoins', 'level', 'level_advance', 'highest_level',
     'damage', 'dps', 'dps_base', 'has_auto_click', 'auto_click_interval',
-    'costs', 'purchases', 'ducks_on_screen', 'bourgeois_purchases',
+    'costs', 'purchases', 'ducks_on_screen', 'bourgeois_purchases', 'smacks',
     'muted', 'victory_seen', 'language',
 ]
 
@@ -29,6 +29,7 @@ def to_dict(state, wall_time=None):
     # starts from zero every time the game opens
     data['boost_left'] = state.boost_time_left()
     data['bourgeois_recharge_left'] = state.bourgeois_recharge_left()
+    data['muscular_rest_left'] = state.muscular_rest_left()
     return data
 
 
@@ -54,6 +55,9 @@ def from_dict(state, data, wall_time=None):
     recharge_left = data.get('bourgeois_recharge_left', 0) - away * 1000
     if recharge_left > 0:
         state.bourgeois_ready = clock_now + recharge_left
+    rest_left = data.get('muscular_rest_left', 0) - away * 1000
+    if rest_left > 0:
+        state.muscular_rest_end = clock_now + rest_left
     state.set_language(state.language)
     state.load_level()
     return away
