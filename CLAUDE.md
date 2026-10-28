@@ -36,6 +36,7 @@ duck_vs_toast/
 tools/simulate_balance.py  virtual player that measures the game's pace
 tools/make_placeholder_icons.py  temporary sound / next-level icons
 tools/crop_images.py       crops full-screen drawings, saves positions
+tools/make_readme_logo.py  the README picture (docs/logo.png): starter duck + name in the font
 tests/                     pytest tests
 assets/images/...          art, cropped to the drawing; assets/images/positions.json says where each goes
 IDEAS.md                   the owner's notepad of future ideas (theirs to edit)
