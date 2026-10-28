@@ -160,6 +160,8 @@ def draw_toast(screen, assets, state, effects, title_font=None):
     if (round(width), round(height)) != body.size:
         body_image = pygame.transform.smoothscale(body_image, (round(width), round(height)))
     if tint:
+        if body_image is toast.image:  # tint a copy: never the drawing itself, or the red adds up
+            body_image = body_image.copy()
         body_image.fill(config.HURT_TINT + (255,), special_flags=pygame.BLEND_RGBA_MULT)
 
     dx, dy = effects.toast_offset()
