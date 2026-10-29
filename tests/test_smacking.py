@@ -229,8 +229,14 @@ def test_the_owners_cursors_are_loaded_small_and_click_with_the_fingertip():
         cursor = load_cursor(name)
         assert cursor is not None, name
         image = cursor.data[1]
-        assert max(image.get_size()) == config.CURSOR_SIZE
+        assert max(image.get_size()) == config.CURSOR_SIZE  # margin included
     pointer = load_cursor('pointer')
     hotspot, image = pointer.data
-    assert hotspot[1] == 0  # the fingertip is the highest point of the drawing
+    # The fingertip is the highest point of the drawing (above it there's only the margin)
+    assert all(image.get_at((x, y)).a <= 128 for x in range(image.get_width()) for y in range(hotspot[1]))
+    # The drawing doesn't touch the image's edges (or shrinking it would cut its outline)
+    width, height = image.get_size()
+    edges = [(x, y) for x in range(width) for y in (0, height - 1)]
+    edges += [(x, y) for x in (0, width - 1) for y in range(height)]
+    assert all(image.get_at(point).a == 0 for point in edges)
     assert image.get_at(hotspot).a > 128

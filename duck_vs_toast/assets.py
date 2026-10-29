@@ -97,6 +97,19 @@ def load_font(size, name=None):
     return font
 
 
+def crop_with_margin(image, margin=0.08):
+    """Crop a drawing to itself, leaving a small see-through margin around it.
+
+    Without the margin, shrinking the drawing trims the soft edge of its outline where it
+    touches the border (the hand's thumb and fingertip looked cut off).
+    """
+    area = image.get_bounding_rect()
+    pad = max(2, round(max(area.size) * margin))
+    cropped = pygame.Surface((area.width + 2 * pad, area.height + 2 * pad), pygame.SRCALPHA)
+    cropped.blit(image, (pad, pad), area)
+    return cropped
+
+
 def load_cursor(name):
     """A mouse cursor drawn by the owner (assets/images/cursors/<name>.png), or None if missing.
 
@@ -107,7 +120,7 @@ def load_cursor(name):
     if not os.path.exists(path):
         return None
     image = pygame.image.load(path).convert_alpha()
-    image = image.subsurface(image.get_bounding_rect()).copy()
+    image = crop_with_margin(image)
     scale = config.CURSOR_SIZE / max(image.get_size())
     image = pygame.transform.smoothscale(
         image, (max(1, round(image.get_width() * scale)), max(1, round(image.get_height() * scale))))
@@ -125,7 +138,7 @@ def load_cursor(name):
 def load_icon(name, size):
     """A small drawing from assets/images/icons, cropped and made `size` pixels big (its longest side)."""
     image = load_image('icons', name + '.png')
-    image = image.subsurface(image.get_bounding_rect()).copy()
+    image = crop_with_margin(image)
     scale = size / max(image.get_size())
     return pygame.transform.smoothscale(
         image, (max(1, round(image.get_width() * scale)), max(1, round(image.get_height() * scale))))
