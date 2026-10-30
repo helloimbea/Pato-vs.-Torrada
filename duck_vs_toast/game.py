@@ -4,7 +4,7 @@ import sys
 
 import pygame
 
-from . import config, save, shop
+from . import config, save
 from .assets import Assets, load_font, localized
 from .clock import GameClock
 from .effects import Effects
@@ -14,50 +14,22 @@ from .numbers import format_number
 from .screen import Screen
 from .smacking import Smacking
 from .state import GameState
+from .ui import Ui
 
 
-def clicked_circle(mouse_pos, center, radius):
-    return pygame.math.Vector2(center).distance_to(mouse_pos) < radius
-
-
-def handle_click(event, state, assets, toast_rect, layout):
+def handle_click(event, state, assets, toast_rect, layout, interface):
+    """A left click: on a button (see ui.py), or else on the toast."""
     if event.button != 1:  # only the left mouse button does anything
         return
-
-    # Each part of the screen has its own place in the window (see layout.py)
-    in_center = layout.to_group('center', event.pos)
-    in_top_right = layout.to_group('top_right', event.pos)
-    in_shop = layout.to_group('bottom', event.pos)
     if config.DEV_MODE:
-        print(f'Mouse clicked at: {in_center} (center), {in_top_right} (top right), {in_shop} (shop)')
+        print(f"Mouse clicked at: {layout.to_group('center', event.pos)} (center), "
+              f"{layout.to_group('bottom', event.pos)} (shop)")
 
-    hit_something = True
-    if toast_rect.collidepoint(in_center):
+    handled, quack = interface.click(state, layout, event.pos)
+    if not handled and toast_rect.collidepoint(layout.to_group('center', event.pos)):
         state.deal_damage(state.click_damage())
-    elif clicked_circle(in_top_right, config.LEVEL_ADVANCE_BUTTON_POS, config.LEVEL_ADVANCE_BUTTON_RADIUS):
-        state.toggle_level_advance()
-    elif clicked_circle(in_top_right, config.PREVIOUS_LEVEL_BUTTON_POS, config.PREVIOUS_LEVEL_BUTTON_RADIUS):
-        state.previous_level()
-    elif clicked_circle(in_top_right, config.NEXT_LEVEL_BUTTON_POS, config.NEXT_LEVEL_BUTTON_RADIUS):
-        state.next_level()
-    elif clicked_circle(in_top_right, config.SOUND_BUTTON_POS, config.SOUND_BUTTON_RADIUS):
-        state.toggle_mute()
-    elif clicked_circle(in_top_right, config.LANGUAGE_BUTTON_POS, config.LANGUAGE_BUTTON_RADIUS):
-        state.toggle_language()
-        pygame.display.set_caption(t('title'))
-    else:
-        hit_something = False
-        for duck in shop.DUCKS:
-            if clicked_circle(in_shop, duck.button_pos, config.SHOP_BUTTON_RADIUS):
-                shop.buy(state, duck)
-                hit_something = True
-                break
-        if clicked_circle(in_shop, config.BOURGEOIS_BUTTON_POS, config.SHOP_BUTTON_RADIUS):
-            shop.buy_bourgeois(state)
-            hit_something = True
-
-    # Quack only when the click hit the toast or a button
-    if hit_something:
+        quack = True
+    if quack:  # quack only when the click hit the toast or a button
         play_quack(assets, state)
 
 
@@ -127,6 +99,8 @@ def main():
 
     effects = Effects(clock=game_clock)
     smacking = Smacking(clock=game_clock)
+    interface = Ui(clock=pygame.time.get_ticks)  # the shop slides even while paused
+    language = state.language
 
     def hit_position(kind):
         """Clicks pop their damage number where the mouse is, smacks where the duck hit;
@@ -176,7 +150,7 @@ def main():
                 if smacking.can_grab(state, in_center, muscular):
                     smacking.grab(in_center, muscular)
                 else:
-                    handle_click(event, state, assets, toast_rect, layout)
+                    handle_click(event, state, assets, toast_rect, layout, interface)
             elif event.type == pygame.MOUSEMOTION and smacking.held:
                 if smacking.move(layout.to_group('center', event.pos), state):
                     play_quack(assets, state)
@@ -187,9 +161,12 @@ def main():
                 state.toggle_mute()
             if event.type == pygame.KEYDOWN and event.key == pygame.K_l:
                 state.toggle_language()
-                pygame.display.set_caption(t('title'))
             if config.DEV_MODE and event.type == pygame.KEYDOWN and event.key == pygame.K_p:
                 state.duckcoins += config.CHEAT_DUCKCOINS
+
+        if state.language != language:  # the window's title follows the language
+            language = state.language
+            pygame.display.set_caption(t('title'))
 
         if not overlay and state.has_won() and not state.victory_seen:
             state.victory_seen = True
@@ -211,6 +188,6 @@ def main():
             set_cursor(assets, grabbing)
         effects.update(state.duckcoins)
         lines = overlay_lines(overlay, away or 0, earned) if overlay else None
-        screen.draw(window, layout, state, effects, smacking, now, pygame.mouse.get_pos(), lines)
+        screen.draw(window, layout, state, effects, smacking, interface, now, pygame.mouse.get_pos(), lines)
         pygame.display.update()
         clock.tick(config.FPS)

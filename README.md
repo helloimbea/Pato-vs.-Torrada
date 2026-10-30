@@ -88,6 +88,7 @@ Pato-vs.-Torrada/
 │   ├── shop.py             # Duck shop: costs and what each duck does
 │   ├── state.py            # Game state and rules (damage, DPS, bosses, levels)
 │   ├── screen.py           # Everything drawn on screen (including the shop tooltips)
+│   ├── ui.py               # Where the buttons are: the sliding shop, settings, level buttons
 │   ├── layout.py           # Resizable window: which corner each part sticks to
 │   ├── save.py             # Saving, loading and Duckcoins earned while closed
 │   ├── clock.py            # Game clock that stops while paused
@@ -124,9 +125,9 @@ Pato-vs.-Torrada/
 - Draw the bread on its own → save just the bread slice as `assets/images/toasts/bread.png` and the map without it as `assets/images/maps/map1.png`. Until then, the game cuts the bread out of the map by itself when it starts.
 - Give a toast a pained face when it gets hit → draw `<toast name>_hurt.png` (for example `nerd_toast_hurt.png`) in `assets/images/toasts/`, in the same spot as the normal one; until then the toast just turns reddish
 - Give a toast a dead face for when it is beaten and shrinks away → draw `<toast name>_dead.png` the same way; until then the beaten toast just turns gray
-- The window can be resized (or maximized): the stats boxes stick to the top left, the level and sound buttons to the top right, the shop to the bottom, and the toast and ducks stay in the middle. Everything is still drawn on a 1280×720 canvas; which part goes where is in `duck_vs_toast/layout.py`, and the lines where the map is split are in the "Resizable window" section of `duck_vs_toast/config.py`
+- The window can be resized (or maximized): the stats boxes stick to the top left, the level buttons to the top center, the settings button to the top right, the shop to the bottom, and the toast and ducks stay in the middle. Everything is still drawn on a 1280×720 canvas; which part goes where is in `duck_vs_toast/layout.py`, and the lines where the map is split are in the "Resizable window" section of `duck_vs_toast/config.py`
 - Change a duck's tooltip text, or any other text the code writes (in English and Portuguese) → `duck_vs_toast/i18n.py`
-- Draw the English version of a drawing with text (toast names, shop titles, "LVL") → save it with `_en` at the end of the same name (for example `nerd_toast_en.png`, `level_advance_on_en.png`, or `maps/map1_en.png` for the shop titles), drawn in the same spot, then run `python -m tools.crop_images`. Until then, English mode shows the Portuguese drawing
+- Draw the English version of a drawing with text ("LVL") → save it with `_en` at the end of the same name (for example `nerd_toast_en.png`, `level_advance_on_en.png`, or `maps/map1_en.png` for the shop titles), drawn in the same spot, then run `python -m tools.crop_images`. Until then, English mode shows the Portuguese drawing
 - Replace the temporary icons (`sound_on`, `sound_off`, `next_level_on`, `next_level_off` in `assets/images/ui/`) → draw your own with the same names, with the icon in the same spot, then run `python -m tools.crop_images`
 
 ---
@@ -219,10 +220,12 @@ The tests also run automatically on GitHub (in the **Actions** tab) every time c
 |---------|-----|
 | Attack | Left Mouse Button |
 | Pause / continue | Esc |
-| Switch language (English / Portuguese) | L (or the EN/PT button, top right) |
-| Mute / unmute the quack | M (or the speaker button, top right) |
-| Go back / forward a level | `<` and `>` buttons next to the level (forward only to levels already beaten) |
-| See what a duck does | Hover the mouse over it in the shop |
+| Open / close the shop | The **Shop** button at the bottom (it glows when you can buy something) |
+| See a duck's name, price and what it does | Hover the mouse over it in the shop |
+| Switch language (English / Portuguese) | L (or the gear button, top right) |
+| Mute / unmute the quack | M (or the gear button, top right) |
+| Go back / forward a level | `<` and `>` buttons next to the level, at the top (forward only to levels already beaten) |
+| Stay on a level to farm Duckcoins | The lock under the level |
 | Cheat: +1 T Duckcoins (only with `DEV_MODE = True` in `duck_vs_toast/config.py`) | P |
 
 ---

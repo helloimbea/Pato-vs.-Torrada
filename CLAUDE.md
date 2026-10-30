@@ -24,6 +24,7 @@ duck_vs_toast/
   shop.py                  ducks: cost, effect and tooltip text
   state.py                 game state and rules (damage, DPS, bosses, levels, mute)
   screen.py                everything drawn on screen (incl. tooltips)
+  ui.py                    where the buttons are and what clicks do: sliding shop, settings, levels
   layout.py                resizable window: offset of each screen part, mouse -> part coords
   save.py                  save/load JSON (~/.duck_vs_toast/save.json), offline earnings
   clock.py                 GameClock: game time that stops while paused
@@ -81,8 +82,18 @@ and say how the pace changed (today: level 54 in about 55 minutes).
 - Mouse cursors are the owner's drawings in `assets/images/cursors/`: `pointer.png` all the
   time (clicks at the fingertip) and `grab.png` while holding the muscular duck; both are made
   `CURSOR_SIZE` big (`assets.load_cursor`).
-- One shared "locked" sign (`ui/locked.png`, drawn over the Siamese portrait) is resized and
-  moved onto each duck's portrait circle (`config.SHOP_PORTRAITS`) when the player can't afford it.
+- Interface (owner asked 2026-10-28): palette in `config.py` (PANEL cream, INK, GOLD only for
+  Duckcoins, HEALTH_RED, GREEN for gains); the stats boxes' blue is repainted with PANEL at
+  startup (`assets.recolor`). Big numbers use the chunky `NUMBER_FONT` (Lilita One). Layout:
+  stats top left (new coin `icons/coin.png`, click damage icon = the owner's pointer drawing),
+  level buttons top center above the toast's name (`top_center` group; the toast and ducks are
+  `CENTER_DROP` lower), a gear top right opening sound/language, health as "cur / max" over a
+  rounded bar, the boss countdown in a circle at the bar's left end (owner may draw
+  `ui/boss_timer.png`) and a tilted red "BOSS" tag on the toast's name. The shop is a panel that
+  slides up from a button at the bottom (`ui.ShopDrawer`); portraits are cut from the old map's
+  shop; affordable ducks glow and hop, others are darkened; name/price/effect show in a tooltip;
+  the closed shop's button glows and hops when something can be bought. In Portuguese the coins
+  are "Patocoins". `ui/locked.png` and `ui/boss_timer_box.png` are no longer used.
 - Automatic hits react like a click, only gentler (`config.HIT_STRENGTH`: click 1, muscular duck 0.6,
   DPS 0.4) and never cut short a stronger reaction; the muscular duck's numbers pop at its pointer's
   tip (`AUTO_CLICK_TIP`), DPS numbers at a random spot on the toast.
@@ -90,9 +101,9 @@ and say how the pace changed (today: level 54 in about 55 minutes).
 - The Duckcoins counter shows `effects.shown_duckcoins`: it rolls up once the flying coins
   arrive and drops at once when spending; `effects.update(state.duckcoins)` drives it.
 - The window is resizable. Art and positions stay in 1280×720 coordinates; `layout.py` pins four
-  parts to the window (`top_left` stats, `top_right` level/sound buttons, `center` toast and ducks,
-  `bottom` shop), and the canvas is scaled to fit. `assets.py` splits the map into background,
-  stats boxes and shop panel; `screen.stretch` widens the background and shop without
+  parts to the window (`top_left` stats, `top_center` level buttons, `top_right` settings,
+  `center` toast and ducks, `bottom` shop), and the canvas is scaled to fit. `assets.split_map` splits the map into background,
+  floor, stats boxes, heart and shop portraits; `screen.stretch` widens the background without
   stretching the drawing. Clicks use `layout.to_group(part, mouse_pos)`.
 - Saving: autosave every 30 s and on close; old saves keep defaults for new fields. Offline
   earnings: the ducks (DPS + muscular duck, no clicks) keep beating the current level's toast

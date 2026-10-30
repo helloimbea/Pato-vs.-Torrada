@@ -97,37 +97,17 @@ def load_font(size, name=None):
     return font
 
 
-def is_ink(color):
-    """The dark gray pencil of the handwritten texts (not the colorful drawings)."""
-    brightest, darkest = max(color.r, color.g, color.b), min(color.r, color.g, color.b)
-    return brightest < 150 and brightest - darkest < 40
+def crop_with_margin(image, margin=0.08):
+    """Crop a drawing to itself, leaving a small see-through margin around it.
 
-
-def erase_shop_titles(game_map):
-    """Erase the ducks' handwritten names from the shop; the game writes them with the font now.
-
-    The pencil strokes (and their soft edges) are painted over with the panel's color.
+    Without the margin, shrinking the drawing trims the soft edge of its outline where it
+    touches the border (the hand's thumb and fingertip looked cut off).
     """
-    top, bottom = config.SHOP_TITLE_AREA
-    area = pygame.Rect(0, top, config.SCREEN_WIDTH, bottom - top)
-    pencil = pygame.mask.Mask(area.size)
-    for x in range(area.left, area.right):
-        for y in range(area.top, area.bottom):
-            if is_ink(game_map.get_at((x, y))):
-                pencil.set_at((x, y - area.top))
-    grown = pygame.mask.Mask(area.size)  # a little bigger, for the soft edges
-    for dx in range(-2, 3):
-        for dy in range(-2, 3):
-            grown.draw(pencil, (dx, dy))
-    erased = game_map.copy()
-    for y in range(area.top, area.bottom):
-        paper = None
-        for x in range(area.left, area.right):
-            if not grown.get_at((x, y - area.top)):
-                paper = game_map.get_at((x, y))  # the last panel color seen on this row
-            elif paper is not None:
-                erased.set_at((x, y), paper)
-    return erased
+    area = image.get_bounding_rect()
+    pad = max(2, round(max(area.size) * margin))
+    cropped = pygame.Surface((area.width + 2 * pad, area.height + 2 * pad), pygame.SRCALPHA)
+    cropped.blit(image, (pad, pad), area)
+    return cropped
 
 
 def load_cursor(name):
@@ -140,7 +120,7 @@ def load_cursor(name):
     if not os.path.exists(path):
         return None
     image = pygame.image.load(path).convert_alpha()
-    image = image.subsurface(image.get_bounding_rect()).copy()
+    image = crop_with_margin(image)
     scale = config.CURSOR_SIZE / max(image.get_size())
     image = pygame.transform.smoothscale(
         image, (max(1, round(image.get_width() * scale)), max(1, round(image.get_height() * scale))))
@@ -155,16 +135,13 @@ def load_cursor(name):
     return pygame.cursors.Cursor(hotspot, image)
 
 
-def cut_coin(game_map):
-    """Copy the Duckcoin drawn on the map (top left), for the flying-coin animation."""
-    radius = config.DUCKCOINS_ICON_RADIUS
-    x, y = config.DUCKCOINS_ICON_POS
-    coin = pygame.Surface((2 * radius, 2 * radius), pygame.SRCALPHA)
-    mask = pygame.Surface((2 * radius, 2 * radius), pygame.SRCALPHA)
-    pygame.draw.circle(mask, (255, 255, 255, 255), (radius, radius), radius)
-    coin.blit(game_map, (0, 0), (x - radius, y - radius, 2 * radius, 2 * radius))
-    coin.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)  # keep only the round part
-    return pygame.transform.smoothscale(coin, (config.COIN_SIZE, config.COIN_SIZE))
+def load_icon(name, size):
+    """A small drawing from assets/images/icons, cropped and made `size` pixels big (its longest side)."""
+    image = load_image('icons', name + '.png')
+    image = crop_with_margin(image)
+    scale = size / max(image.get_size())
+    return pygame.transform.smoothscale(
+        image, (max(1, round(image.get_width() * scale)), max(1, round(image.get_height() * scale))))
 
 
 def is_bread(color):
@@ -213,88 +190,122 @@ def erase_bread(game_map):
     return background
 
 
-def cut_reward_badge(game_map):
-    """Copy the green "+" and the coin under the toast, so they stay in front of the bread."""
-    badge = pygame.Surface(game_map.get_size(), pygame.SRCALPHA)
-    area = pygame.Rect(config.REWARD_BADGE_RECT)
-    for x in range(area.left, area.right):
+def differs(color, background, threshold=24):
+    return abs(color.r - background.r) + abs(color.g - background.g) + abs(color.b - background.b) > threshold
+
+
+def cut_out(game_map, area, reference_x):
+    """Take a drawing out of the map: every pixel in `area` that isn't the background.
+
+    The background of each row is the color at x = reference_x on that row (a spot next to
+    the drawing). Returns (map without the drawing, Sprite of the drawing); the hole is
+    painted with the background.
+    """
+    area = pygame.Rect(area)
+    inside = pygame.mask.Mask(area.size)
+    for y in range(area.top, area.bottom):
+        background = game_map.get_at((reference_x, y))
+        for x in range(area.left, area.right):
+            if differs(game_map.get_at((x, y)), background):
+                inside.set_at((x - area.left, y - area.top))
+    grown = pygame.mask.Mask(area.size)  # a little bigger, to catch the soft edges
+    for dx in range(-2, 3):
+        for dy in range(-2, 3):
+            grown.draw(inside, (dx, dy))
+    piece = pygame.Surface(area.size, pygame.SRCALPHA)
+    without = game_map.copy()
+    for y in range(area.top, area.bottom):
+        background = game_map.get_at((reference_x, y))
+        for x in range(area.left, area.right):
+            if grown.get_at((x - area.left, y - area.top)):
+                piece.set_at((x - area.left, y - area.top), game_map.get_at((x, y)))
+                without.set_at((x, y), background)
+    return without, Sprite(piece, area.topleft)
+
+
+def is_box_blue(color):
+    """The blue paint of the stats boxes (not their icons, not see-through edges)."""
+    return color.a > 0 and color.b > color.r + 12 and color.b > 120
+
+
+def erase_icons(panel, areas, panel_pos):
+    """Paint the old icons in the stats boxes over with the box's own blue (row by row)."""
+    for area in areas:
+        area = pygame.Rect(area).move(-panel_pos[0], -panel_pos[1])
         for y in range(area.top, area.bottom):
-            color = game_map.get_at((x, y))
-            # Not the blue background and not the bread: the plus sign or the coin
-            if (color.r > color.b or color.g > color.b + 20) and not is_bread(color):
-                badge.set_at((x, y), color)
-    # The coin's face has bread-like colors; take whatever is enclosed by the coin's rim too
-    outside = pygame.mask.from_surface(badge.subsurface(area))
-    outside.invert()
-    for hole in outside.connected_components():
-        box = hole.get_bounding_rects()[0]
-        if box.left > 0 and box.top > 0 and box.right < area.width and box.bottom < area.height:
-            for x in range(box.left, box.right):
-                for y in range(box.top, box.bottom):
-                    if hole.get_at((x, y)):
-                        position = (area.left + x, area.top + y)
-                        badge.set_at(position, game_map.get_at(position))
-    return make_sprite(badge, 'reward_badge', {})
+            paint = None
+            for x in range(max(area.left - 6, 0), area.right):
+                color = panel.get_at((x, y))
+                if x < area.left:
+                    if is_box_blue(color):
+                        paint = color
+                elif is_box_blue(color):
+                    paint = color
+                elif paint is not None and color.a > 0:
+                    panel.set_at((x, y), paint)
+
+
+def recolor(image, target):
+    """Paint the blue of a drawing with `target`, keeping its brush strokes (lighter and darker spots)."""
+    blues = [image.get_at((x, y)) for x in range(0, image.get_width(), 3)
+             for y in range(0, image.get_height(), 3) if is_box_blue(image.get_at((x, y)))]
+    if not blues:
+        return
+    middle = sum(color.r + color.g + color.b for color in blues) / len(blues)
+    for x in range(image.get_width()):
+        for y in range(image.get_height()):
+            color = image.get_at((x, y))
+            if is_box_blue(color):
+                light = (color.r + color.g + color.b) / middle
+                image.set_at((x, y), tuple(min(255, round(part * light)) for part in target) + (color.a,))
 
 
 def cut_stats_panel(game_map):
     """Take the Duckcoins, DPS and damage boxes out of the map, so they can stay in the corner.
 
-    Returns (map without the boxes, boxes Sprite). The hole is filled with the sky or floor
-    color of each row, taken just right of the boxes.
+    Their old coin and sword icons are erased (the game draws the new coin and the mouse
+    drawing there) and their blue is painted with the palette's panel color.
+    Returns (map without the boxes, boxes Sprite).
     """
     area = pygame.Rect(config.STATS_BOXES[0]).unionall(config.STATS_BOXES)
-    reference_x = area.right + 15
     panel = pygame.Surface(area.size, pygame.SRCALPHA)
-    without_boxes = game_map.copy()
     for box in config.STATS_BOXES:
-        box = pygame.Rect(box)
-        inside = pygame.mask.Mask(box.size)  # what differs from the sky or floor around it
-        for y in range(box.top, box.bottom):
-            background = game_map.get_at((reference_x, y))
-            for x in range(box.left, box.right):
-                color = game_map.get_at((x, y))
-                if abs(color.r - background.r) + abs(color.g - background.g) \
-                        + abs(color.b - background.b) > 24:
-                    inside.set_at((x - box.left, y - box.top))
-        grown = pygame.mask.Mask(box.size)  # a little bigger, to catch the soft edges
-        for dx in range(-2, 3):
-            for dy in range(-2, 3):
-                grown.draw(inside, (dx, dy))
-        for y in range(box.top, box.bottom):
-            background = game_map.get_at((reference_x, y))
-            for x in range(box.left, box.right):
-                if grown.get_at((x - box.left, y - box.top)):
-                    panel.set_at((x - area.left, y - area.top), game_map.get_at((x, y)))
-                    without_boxes.set_at((x, y), background)
-    return without_boxes, Sprite(panel, area.topleft)
+        game_map, piece = cut_out(game_map, box, area.right + 15)
+        panel.blit(piece.image, (piece.pos[0] - area.left, piece.pos[1] - area.top))
+    erase_icons(panel, config.OLD_ICON_AREAS, area.topleft)
+    recolor(panel, config.PANEL)
+    return game_map, Sprite(panel, area.topleft)
 
 
-def split_map(game_map, reward_badge):
-    """Split the map in the background (sky and floor) and the shop panel at the bottom.
+def cut_portraits(game_map):
+    """The round duck portraits of the map's old shop, for the new shop: {duck name: Sprite}."""
+    portraits = {}
+    for name, (x, y, diameter) in config.SHOP_PORTRAITS.items():
+        # Exactly the round portrait (its old soft shadow is left behind; the shop draws one)
+        size = round(diameter) + 2
+        area = pygame.Rect(round(x - size / 2), round(y - size / 2), size, size)
+        circle = pygame.Surface((size, size), pygame.SRCALPHA)
+        pygame.draw.circle(circle, (255, 255, 255, 255), (size / 2, size / 2), diameter / 2)
+        portrait = pygame.Surface((size, size), pygame.SRCALPHA)
+        portrait.blit(game_map, (0, 0), area)
+        portrait.blit(circle, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)  # keep only the circle
+        portraits[name] = Sprite(portrait, area.topleft)
+    return portraits
 
-    The "+ coin" under the toast is taken out of the shop, because it goes with the toast
-    (reward_badge draws it). Returns (background, shop Sprite, floor row): the floor row is
-    the background's last line without the "+ coin", repeated down when the window is taller.
-    """
-    width, height = game_map.get_size()
-    shop = game_map.subsurface((0, config.SHOP_TOP, width, height - config.SHOP_TOP)).copy()
-    badge = reward_badge.rect.inflate(4, 4)
-    shape = pygame.mask.Mask(badge.size)  # a little bigger than the badge, for its soft edges
-    for dx in range(5):
-        for dy in range(5):
-            shape.draw(pygame.mask.from_surface(reward_badge.image), (dx, dy))
-    for y in range(config.SHOP_TOP, badge.bottom):
-        fill = game_map.get_at((badge.left - 10, y))
-        for x in range(badge.left, badge.right):
-            if shape.get_at((x - badge.left, y - badge.top)):
-                shop.set_at((x, y - config.SHOP_TOP), fill)
 
+def split_map(game_map):
+    """Split the map in the parts the game uses (see MapParts)."""
+    game_map = erase_bread(game_map)
+    game_map, heart = cut_out(game_map, config.HEART_RECT, config.HEART_RECT[0] - 6)
+    badge = config.REWARD_BADGE_RECT
+    game_map, _ = cut_out(game_map, badge, badge[0] - 6)  # the old "+ coin" (drawn by the game now)
+    game_map, stats_panel = cut_stats_panel(game_map)
+    portraits = cut_portraits(game_map)
+
+    width = game_map.get_width()
     background = game_map.subsurface((0, 0, width, config.SHOP_TOP)).copy()
     floor_row = background.subsurface((0, config.SHOP_TOP - 1, width, 1)).copy()
-    floor_row.fill(game_map.get_at((badge.left - 10, config.SHOP_TOP - 1)),
-                   (badge.left - 5, 0, badge.width + 10, 1))
-    return background, Sprite(shop, (0, config.SHOP_TOP)), floor_row
+    return MapParts(background, floor_row, stats_panel, heart, portraits)
 
 
 def localized(sprites, name):
@@ -310,10 +321,11 @@ def localized(sprites, name):
 @dataclass
 class MapParts:
     """The map split so each part can follow its edge of the window (see layout.py)."""
-    background: pygame.Surface
-    shop: Sprite
-    floor_row: pygame.Surface
-    stats_panel: Sprite
+    background: pygame.Surface   # sky and floor (the bread and the drawings below are erased)
+    floor_row: pygame.Surface    # the floor's last line, repeated down to the bottom
+    stats_panel: Sprite          # the Duckcoins, DPS and damage boxes
+    heart: Sprite                # the heart next to the toast's health
+    portraits: dict              # the round duck portraits for the shop
 
 
 class Assets:
@@ -327,32 +339,29 @@ class Assets:
         self.ducks = load_folder('ducks', positions)
         self.toasts = load_folder('toasts', positions)
         self.ui = load_folder('ui', positions)
-        game_map = self.load_map('map1.png')
-        self.reward_badge = cut_reward_badge(game_map)
-        self.coin = cut_coin(game_map)
-        self.maps = {'pt': self.split(game_map)}  # one per language, made when first needed
+        self.coin = load_icon('coin', config.COIN_SIZE)  # the flying coins
+        self.coin_icons = {}  # the coin at other sizes, made when first needed
+        self.maps = {'pt': split_map(self.load_map('map1.png'))}  # one per language, when needed
         self.cursors = {name: load_cursor(name) for name in ('pointer', 'grab')}
         self.click_sound = None  # stays None when there is no audio device (e.g. Codespaces)
         if pygame.mixer.get_init():
             self.click_sound = pygame.mixer.Sound(os.path.join(config.SOUNDS_DIR, 'quack.wav'))
+
+    def coin_icon(self, size):
+        if size not in self.coin_icons:
+            self.coin_icons[size] = load_icon('coin', size)
+        return self.coin_icons[size]
 
     @staticmethod
     def load_map(file_name):
         game_map = load_image('maps', file_name)
         return pygame.transform.scale(game_map, (config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
 
-    def split(self, game_map):
-        game_map = erase_bread(game_map)
-        game_map = erase_shop_titles(game_map)
-        game_map, stats_panel = cut_stats_panel(game_map)
-        background, shop, floor_row = split_map(game_map, self.reward_badge)
-        return MapParts(background, shop, floor_row, stats_panel)
-
     def map_parts(self):
         """The map for the current language: maps/map1_en.png in English, when it exists."""
         language = i18n.language
         if language not in self.maps:
             path = os.path.join(config.IMAGES_DIR, 'maps', f'map1_{language}.png')
-            self.maps[language] = self.split(self.load_map(os.path.basename(path))) \
+            self.maps[language] = split_map(self.load_map(os.path.basename(path))) \
                 if os.path.exists(path) else self.maps['pt']
         return self.maps[language]
